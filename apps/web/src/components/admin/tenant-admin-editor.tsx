@@ -100,7 +100,13 @@ const emptyBanner: NewBannerState = {
   imageUrl: "",
 };
 
-export function TenantAdminEditor({ initialTenant }: TenantAdminEditorProps) {
+import { ProductAdminEditor } from "./product-admin-editor";
+
+export function TenantAdminEditor({
+  initialTenant,
+}: {
+  initialTenant: AdminTenantDetail;
+}) {
   const [tenant, setTenant] = useState(initialTenant);
   const [newCategory, setNewCategory] = useState<NewCategoryState>(emptyCategory);
   const [newProduct, setNewProduct] = useState<NewProductState>(emptyProduct);
@@ -541,186 +547,57 @@ export function TenantAdminEditor({ initialTenant }: TenantAdminEditorProps) {
 
             <div className="mt-6 space-y-4">
               {tenant.products.map((product) => (
-                <div key={product.id} className="rounded-[24px] border border-slate-200 p-4">
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <input
-                      value={product.name}
-                      onChange={(event) =>
-                        setTenant((current) => ({
-                          ...current,
-                          products: current.products.map((item) =>
-                            item.id === product.id
-                              ? { ...item, name: event.target.value }
-                              : item,
-                          ),
+                <ProductAdminEditor
+                  key={product.id}
+                  product={product}
+                  categories={tenant.categories}
+                  isSaving={isBusy(`product-${product.id}`)}
+                  onUpdate={(updatedProduct) => {
+                    setTenant((current) => ({
+                      ...current,
+                      products: current.products.map((item) =>
+                        item.id === product.id ? updatedProduct : item
+                      ),
+                    }));
+                  }}
+                  onSave={() => {
+                    void runMutation(`product-${product.id}`, () =>
+                      updateAdminProduct(product.id, {
+                        name: product.name,
+                        slug: product.slug,
+                        categoryId: product.category?.id ?? null,
+                        shortDescription: product.shortDescription,
+                        price: product.price,
+                        compareAtPrice: product.compareAtPrice,
+                        stock: product.stock,
+                        imageUrl: product.images[0]?.url ?? "",
+                        options: product.options?.map(o => ({
+                          name: o.name,
+                          position: o.position,
+                          values: o.values.map(v => v.value)
+                        })),
+                        variants: product.variants?.map(v => ({
+                          name: v.name,
+                          sku: v.sku,
+                          price: v.price,
+                          compareAtPrice: v.compareAtPrice,
+                          stock: v.stock,
+                          weight: v.weight,
+                          imageUrl: v.image?.url || v.imageUrl,
+                          options: v.options.reduce((acc, o) => {
+                            acc[o.option?.name || o.optionId] = o.value?.value || o.valueId;
+                            return acc;
+                          }, {} as Record<string, string>)
                         }))
-                      }
-                      className="rounded-2xl border border-slate-200 px-4 py-3"
-                    />
-                    <input
-                      value={product.slug}
-                      onChange={(event) =>
-                        setTenant((current) => ({
-                          ...current,
-                          products: current.products.map((item) =>
-                            item.id === product.id
-                              ? { ...item, slug: event.target.value }
-                              : item,
-                          ),
-                        }))
-                      }
-                      className="rounded-2xl border border-slate-200 px-4 py-3"
-                    />
-                    <select
-                      value={product.category?.id ?? ""}
-                      onChange={(event) =>
-                        setTenant((current) => ({
-                          ...current,
-                          products: current.products.map((item) =>
-                            item.id === product.id
-                              ? {
-                                  ...item,
-                                  category:
-                                    current.categories.find(
-                                      (category) => category.id === event.target.value,
-                                    ) ?? null,
-                                }
-                              : item,
-                          ),
-                        }))
-                      }
-                      className="rounded-2xl border border-slate-200 px-4 py-3"
-                    >
-                      <option value="">Sin categoria</option>
-                      {tenant.categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      value={String(product.price)}
-                      onChange={(event) =>
-                        setTenant((current) => ({
-                          ...current,
-                          products: current.products.map((item) =>
-                            item.id === product.id
-                              ? { ...item, price: event.target.value }
-                              : item,
-                          ),
-                        }))
-                      }
-                      className="rounded-2xl border border-slate-200 px-4 py-3"
-                    />
-                    <input
-                      value={String(product.compareAtPrice ?? "")}
-                      onChange={(event) =>
-                        setTenant((current) => ({
-                          ...current,
-                          products: current.products.map((item) =>
-                            item.id === product.id
-                              ? { ...item, compareAtPrice: event.target.value }
-                              : item,
-                          ),
-                        }))
-                      }
-                      placeholder="Precio anterior"
-                      className="rounded-2xl border border-slate-200 px-4 py-3"
-                    />
-                    <input
-                      value={String(product.stock)}
-                      onChange={(event) =>
-                        setTenant((current) => ({
-                          ...current,
-                          products: current.products.map((item) =>
-                            item.id === product.id
-                              ? { ...item, stock: Number(event.target.value) }
-                              : item,
-                          ),
-                        }))
-                      }
-                      className="rounded-2xl border border-slate-200 px-4 py-3"
-                    />
-                    <input
-                      value={product.images[0]?.url ?? ""}
-                      onChange={(event) =>
-                        setTenant((current) => ({
-                          ...current,
-                          products: current.products.map((item) =>
-                            item.id === product.id
-                              ? {
-                                  ...item,
-                                  images: item.images[0]
-                                    ? [{ ...item.images[0], url: event.target.value }]
-                                    : [
-                                        {
-                                          id: `draft-${item.id}`,
-                                          url: event.target.value,
-                                          alt: item.name,
-                                        },
-                                      ],
-                                }
-                              : item,
-                          ),
-                        }))
-                      }
-                      placeholder="Imagen URL"
-                      className="rounded-2xl border border-slate-200 px-4 py-3 md:col-span-2"
-                    />
-                    <input
-                      value={product.shortDescription ?? ""}
-                      onChange={(event) =>
-                        setTenant((current) => ({
-                          ...current,
-                          products: current.products.map((item) =>
-                            item.id === product.id
-                              ? { ...item, shortDescription: event.target.value }
-                              : item,
-                          ),
-                        }))
-                      }
-                      placeholder="Descripcion corta"
-                      className="rounded-2xl border border-slate-200 px-4 py-3 md:col-span-2"
-                    />
-                  </div>
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void runMutation(`product-${product.id}`, () =>
-                          updateAdminProduct(product.id, {
-                            name: product.name,
-                            slug: product.slug,
-                            categoryId: product.category?.id ?? null,
-                            shortDescription: product.shortDescription,
-                            price: product.price,
-                            compareAtPrice: product.compareAtPrice,
-                            stock: product.stock,
-                            imageUrl: product.images[0]?.url ?? "",
-                          }),
-                        )
-                      }
-                      disabled={isBusy(`product-${product.id}`)}
-                      className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-                    >
-                      <Save className="size-4" />
-                      Guardar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void runMutation(`product-delete-${product.id}`, () =>
-                          deleteAdminProduct(product.id),
-                        )
-                      }
-                      disabled={isBusy(`product-delete-${product.id}`)}
-                      className="inline-flex items-center gap-2 rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 disabled:opacity-50"
-                    >
-                      <Trash2 className="size-4" />
-                      Eliminar
-                    </button>
-                  </div>
-                </div>
+                      })
+                    );
+                  }}
+                  onDelete={() => {
+                    void runMutation(`product-delete-${product.id}`, () =>
+                      deleteAdminProduct(product.id)
+                    );
+                  }}
+                />
               ))}
             </div>
 

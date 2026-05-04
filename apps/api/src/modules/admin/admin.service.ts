@@ -48,6 +48,20 @@ type ProductPayload = {
   stock?: number;
   status?: string;
   imageUrl?: string | null;
+  options?: Array<{
+    name: string;
+    values: string[];
+  }>;
+  variants?: Array<{
+    name: string;
+    sku?: string | null;
+    price?: number | string | null;
+    compareAtPrice?: number | string | null;
+    stock?: number;
+    weight?: number | string | null;
+    imageUrl?: string | null;
+    options: Record<string, string>;
+  }>;
 };
 
 type PromotionPayload = {
@@ -227,6 +241,21 @@ export class AdminService {
           orderBy: [{ updatedAt: 'desc' }],
           include: {
             category: true,
+            options: {
+              orderBy: { position: 'asc' },
+              include: { values: { orderBy: { position: 'asc' } } }
+            },
+            variants: {
+              include: {
+                image: true,
+                options: {
+                  include: {
+                    option: { select: { name: true } },
+                    value: { select: { value: true } }
+                  }
+                }
+              }
+            },
             images: {
               orderBy: {
                 sortOrder: 'asc',
@@ -438,6 +467,10 @@ export class AdminService {
       product.name,
     );
 
+    if (input.options && input.variants) {
+      await this.syncProductVariants(product.id, input.options, input.variants);
+    }
+
     return this.prisma.product.findUnique({
       where: {
         id: product.id,
@@ -509,6 +542,10 @@ export class AdminService {
         input.imageUrl,
         updated.name,
       );
+    }
+
+    if (input.options && input.variants) {
+      await this.syncProductVariants(updated.id, input.options, input.variants);
     }
 
     return this.prisma.product.findUnique({
@@ -1504,5 +1541,110 @@ export class AdminService {
     }
 
     return subdomain;
+  }
+  private async syncProductVariants(
+    productId: string,
+    options: Array<{ name: string; values: string[] }>,
+    variants: Array<{
+      name: string;
+      sku?: string | null;
+      price?: number | string | null;
+      compareAtPrice?: number | string | null;
+      stock?: number;
+      weight?: number | string | null;
+      imageUrl?: string | null;
+      options: Record<string, string>;
+    }>
+  ) {
+    // 1. Delete existing options and variants (cascade handles values and variantOptions)
+    await this.prisma.productVariant.deleteMany({ where: { productId } });
+    await this.prisma.productOption.deleteMany({ where: { productId } });
+
+    if (options.length === 0 || variants.length === 0) return;
+
+    // 2. Create Options & Values
+    const optionMap = new Map<string, Map<string, string>>(); // optionName -> valueName -> valueId
+    const optionDbMap = new Map<string, string>(); // optionName -> optionId
+
+    for (const [oIdx, opt] of options.entries()) {
+      const createdOption = await this.prisma.productOption.create({
+        data: {
+          productId,
+          name: opt.name.trim(),
+          position: oIdx,
+          values: {
+            create: opt.values.map((v, vIdx) => ({
+              value: v.trim(),
+              position: vIdx,
+            })),
+          },
+        },
+        include: { values: true },
+      });
+
+      optionDbMap.set(opt.name.trim(), createdOption.id);
+      
+      const valMap = new Map<string, string>();
+      for (const val of createdOption.values) {
+        valMap.set(val.value, val.id);
+      }
+      optionMap.set(opt.name.trim(), valMap);
+    }
+
+    // 3. Create Variants & Link to Values
+    for (const variant of variants) {
+      let imageId = undefined;
+      if (variant.imageUrl) {
+        // Try to find if image exists
+        const existingImage = await this.prisma.productImage.findFirst({
+          where: { productId, url: variant.imageUrl }
+        });
+        
+        if (existingImage) {
+          imageId = existingImage.id;
+        } else {
+          // Get the tenant ID from product
+          const product = await this.prisma.product.findUnique({ where: { id: productId }});
+          if (product) {
+            const newImage = await this.prisma.productImage.create({
+              data: {
+                productId,
+                tenantId: product.tenantId,
+                url: variant.imageUrl,
+              }
+            });
+            imageId = newImage.id;
+          }
+        }
+      }
+
+      const createdVariant = await this.prisma.productVariant.create({
+        data: {
+          productId,
+          name: variant.name,
+          sku: variant.sku || null,
+          price: variant.price !== undefined && variant.price !== null ? new Prisma.Decimal(variant.price) : null,
+          compareAtPrice: variant.compareAtPrice !== undefined && variant.compareAtPrice !== null ? new Prisma.Decimal(variant.compareAtPrice) : null,
+          stock: variant.stock || 0,
+          weight: variant.weight !== undefined && variant.weight !== null ? new Prisma.Decimal(variant.weight) : null,
+          imageId,
+        }
+      });
+
+      // Link options
+      for (const [optName, valName] of Object.entries(variant.options)) {
+        const optId = optionDbMap.get(optName.trim());
+        const valId = optionMap.get(optName.trim())?.get(valName.trim());
+        if (optId && valId) {
+          await this.prisma.productVariantOption.create({
+            data: {
+              variantId: createdVariant.id,
+              optionId: optId,
+              valueId: valId,
+            }
+          });
+        }
+      }
+    }
   }
 }

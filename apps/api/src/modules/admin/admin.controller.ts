@@ -46,6 +46,20 @@ type ProductPayload = {
   stock?: number;
   status?: string;
   imageUrl?: string | null;
+  options?: Array<{
+    name: string;
+    values: string[];
+  }>;
+  variants?: Array<{
+    name: string;
+    sku?: string | null;
+    price?: number | string | null;
+    compareAtPrice?: number | string | null;
+    stock?: number;
+    weight?: number | string | null;
+    imageUrl?: string | null;
+    options: Record<string, string>;
+  }>;
 };
 
 type PromotionPayload = {

@@ -132,11 +132,11 @@ model Membership {
   role      MembershipRole
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
-  tenant     Tenant?       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant    Tenant?        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([tenantId, role])
   @@unique([userId, tenantId, role])
+  @@index([tenantId, role])
 }
 
 model Category {
@@ -151,12 +151,12 @@ model Category {
   products    Product[]
   tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  @@index([tenantId, position])
   @@unique([tenantId, slug])
+  @@index([tenantId, position])
 }
 
 model Product {
-  id               String        @id @default(cuid())
+  id               String             @id @default(cuid())
   tenantId         String
   categoryId       String?
   name             String
@@ -164,37 +164,93 @@ model Product {
   shortDescription String?
   description      String?
   sku              String?
-  price            Decimal       @db.Decimal(10, 2)
-  compareAtPrice   Decimal?      @db.Decimal(10, 2)
-  currency         String        @default("USD")
-  status           ProductStatus @default(DRAFT)
-  featured         Boolean       @default(false)
-  stock            Int           @default(0)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  category         Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  price            Decimal            @db.Decimal(10, 2)
+  compareAtPrice   Decimal?           @db.Decimal(10, 2)
+  currency         String             @default("USD")
+  status           ProductStatus      @default(DRAFT)
+  featured         Boolean            @default(false)
+  stock            Int                @default(0)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  category         Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   images           ProductImage[]
-  tenant           Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant           Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   quoteItems       QuoteRequestItem[]
+  options          ProductOption[]
+  variants         ProductVariant[]
 
+  @@unique([tenantId, slug])
   @@index([tenantId, status])
   @@index([tenantId, categoryId])
-  @@unique([tenantId, slug])
 }
 
 model ProductImage {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   tenantId  String
   productId String
   url       String
   alt       String?
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sortOrder Int              @default(0)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  product   Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variants  ProductVariant[]
 
   @@index([productId, sortOrder])
   @@index([tenantId])
+}
+
+model ProductOption {
+  id                    String                 @id @default(cuid())
+  productId             String
+  name                  String // e.g. "Color", "Talla"
+  position              Int                    @default(0)
+  values                ProductOptionValue[]
+  product               Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productVariantOptions ProductVariantOption[]
+
+  @@unique([productId, name])
+}
+
+model ProductOptionValue {
+  id             String                 @id @default(cuid())
+  optionId       String
+  value          String // e.g. "Rojo", "XL"
+  position       Int                    @default(0)
+  option         ProductOption          @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  variantOptions ProductVariantOption[]
+
+  @@unique([optionId, value])
+}
+
+model ProductVariant {
+  id             String   @id @default(cuid())
+  productId      String
+  name           String // e.g. "Rojo / XL"
+  sku            String?
+  price          Decimal? @db.Decimal(10, 2)
+  compareAtPrice Decimal? @db.Decimal(10, 2)
+  stock          Int      @default(0)
+  weight         Decimal? @db.Decimal(10, 2)
+  imageId        String?
+
+  product Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  image   ProductImage?          @relation(fields: [imageId], references: [id], onDelete: SetNull)
+  options ProductVariantOption[]
+
+  @@index([productId])
+}
+
+model ProductVariantOption {
+  variantId String
+  optionId  String
+  valueId   String
+
+  variant ProductVariant     @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  option  ProductOption      @relation(fields: [optionId], references: [id], onDelete: Restrict)
+  value   ProductOptionValue @relation(fields: [valueId], references: [id], onDelete: Restrict)
+
+  @@id([variantId, optionId])
 }
 
 model Banner {
@@ -270,21 +326,21 @@ model Promotion {
   rules      PromotionRule[]
   tenant     Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  @@index([tenantId, status, startsAt, endsAt])
   @@unique([tenantId, slug])
+  @@index([tenantId, status, startsAt, endsAt])
 }
 
 model PromotionRule {
-  id          String     @id @default(cuid())
+  id          String    @id @default(cuid())
   promotionId String
   scope       String
   operator    String
   value       String?
   minQuantity Int?
-  minAmount   Decimal?   @db.Decimal(10, 2)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  promotion   Promotion  @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  minAmount   Decimal?  @db.Decimal(10, 2)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
 
   @@index([promotionId])
 }

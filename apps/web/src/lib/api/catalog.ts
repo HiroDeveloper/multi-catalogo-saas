@@ -58,7 +58,34 @@ export type StorefrontProduct = {
     type: string;
     finalPrice: string;
     discountPercent: number;
-  };
+  } | null;
+  options?: Array<{
+    id: string;
+    name: string;
+    position: number;
+    values: Array<{
+      id: string;
+      value: string;
+      position: number;
+    }>;
+  }>;
+  variants?: Array<{
+    id: string;
+    name: string;
+    sku: string | null;
+    price: number | string | null;
+    compareAtPrice: number | string | null;
+    stock: number;
+    weight: number | string | null;
+    imageId: string | null;
+    image: { id: string; url: string } | null;
+    options: Array<{
+      optionId: string;
+      valueId: string;
+      option: { name: string };
+      value: { value: string };
+    }>;
+  }>;
 };
 
 export type StorefrontTenant = {

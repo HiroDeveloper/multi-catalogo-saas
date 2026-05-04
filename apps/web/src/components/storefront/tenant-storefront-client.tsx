@@ -37,6 +37,8 @@ type CartItem = {
   price: number;
   quantity: number;
   imageUrl: string | null;
+  variantId?: string;
+  variantName?: string;
 };
 
 function formatCurrency(value: number) {
@@ -175,6 +177,14 @@ export function TenantStorefrontClient({
   });
   const [isPending, startTransition] = useTransition();
 
+  const [selectedProduct, setSelectedProduct] = useState<StorefrontProduct | null>(null);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  
+  // Find matching variant based on selected options
+  const matchingVariant = selectedProduct?.variants?.find(v => 
+    v.options.every(o => selectedOptions[o.option.name] === o.value.value)
+  );
+
   useEffect(() => {
     window.localStorage.setItem(storageKey, JSON.stringify(cart));
   }, [cart, storageKey]);
@@ -185,18 +195,37 @@ export function TenantStorefrontClient({
     0,
   );
 
-  function addToCart(product: StorefrontProduct) {
+  function handleAddToCartClick(product: StorefrontProduct) {
+    if (product.options && product.options.length > 0) {
+      setSelectedProduct(product);
+      setSelectedOptions({});
+    } else {
+      addToCart(product);
+    }
+  }
+
+  function addToCart(product: StorefrontProduct, variant?: any) {
     setCheckoutDone("");
-    const effectivePrice = product.promotion
+    let effectivePrice = product.promotion
       ? parseNumber(product.promotion.finalPrice)
       : parseNumber(product.price);
+      
+    if (variant && variant.price !== null) {
+       effectivePrice = parseNumber(variant.price);
+    }
+
+    const name = variant ? `${product.name} - ${variant.name}` : product.name;
+    const imageUrl = variant?.image?.url || variant?.imageUrl || product.images[0]?.url || null;
+    const idKey = variant ? `${product.id}-${variant.id}` : product.id;
 
     setCart((currentCart) => {
-      const existing = currentCart.find((item) => item.productId === product.id);
+      const existing = currentCart.find((item) => 
+        (variant ? item.variantId === variant.id : item.productId === product.id && !item.variantId)
+      );
 
       if (existing) {
         return currentCart.map((item) =>
-          item.productId === product.id
+          (variant ? item.variantId === variant.id : item.productId === product.id && !item.variantId)
             ? { ...item, quantity: item.quantity + 1 }
             : item,
         );
@@ -206,31 +235,37 @@ export function TenantStorefrontClient({
         ...currentCart,
         {
           productId: product.id,
-          name: product.name,
+          name,
           price: effectivePrice,
           quantity: 1,
-          imageUrl: product.images[0]?.url ?? null,
+          imageUrl,
+          variantId: variant?.id,
+          variantName: variant?.name,
         },
       ];
     });
+    
+    setSelectedProduct(null);
     setIsCartOpen(true);
   }
 
-  function changeQuantity(productId: string, delta: number) {
+  function changeQuantity(idKey: string, delta: number) {
     setCart((currentCart) =>
       currentCart
-        .map((item) =>
-          item.productId === productId
-            ? { ...item, quantity: item.quantity + delta }
-            : item,
-        )
+        .map((item) => {
+          const itemKey = item.variantId ? `${item.productId}-${item.variantId}` : item.productId;
+          return itemKey === idKey ? { ...item, quantity: item.quantity + delta } : item;
+        })
         .filter((item) => item.quantity > 0),
     );
   }
 
-  function removeItem(productId: string) {
+  function removeItem(idKey: string) {
     setCart((currentCart) =>
-      currentCart.filter((item) => item.productId !== productId),
+      currentCart.filter((item) => {
+        const itemKey = item.variantId ? `${item.productId}-${item.variantId}` : item.productId;
+        return itemKey !== idKey;
+      }),
     );
   }
 
@@ -484,7 +519,7 @@ export function TenantStorefrontClient({
                   <div className="flex flex-col gap-2">
                     <button
                       type="button"
-                      onClick={() => addToCart(product)}
+                      onClick={() => handleAddToCartClick(product)}
                       className="inline-flex items-center justify-center gap-2 rounded-md py-3 text-center text-xs font-bold uppercase tracking-[0.16em] text-white transition-transform active:scale-95"
                       style={getAccentButtonStyle(primary, secondary)}
                     >
@@ -898,6 +933,98 @@ export function TenantStorefrontClient({
           </div>
         </div>
       </footer>
+
+      {/* Product Variant Modal */}
+      {selectedProduct && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-stone-900/60 p-4 backdrop-blur-sm">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-[32px] bg-white shadow-2xl">
+            <button
+              onClick={() => setSelectedProduct(null)}
+              className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-stone-100 text-stone-500 hover:bg-stone-200"
+            >
+              <X className="size-5" />
+            </button>
+            <div className="p-8">
+              <div className="mb-6 flex gap-4">
+                <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-stone-100">
+                  <Image
+                    src={matchingVariant?.image?.url || (matchingVariant as any)?.imageUrl || selectedProduct.images[0]?.url || ""}
+                    alt={matchingVariant?.name || selectedProduct.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div>
+                  <h3 className="font-display text-2xl font-black text-stone-900 leading-tight">
+                    {selectedProduct.name}
+                  </h3>
+                  <p className="mt-1 text-xl font-bold" style={{ color: primary }}>
+                    {formatCurrency(
+                      matchingVariant && matchingVariant.price !== null
+                        ? parseNumber(matchingVariant.price)
+                        : selectedProduct.promotion
+                          ? parseNumber(selectedProduct.promotion.finalPrice)
+                          : parseNumber(selectedProduct.price)
+                    )}
+                  </p>
+                  {matchingVariant && (
+                    <p className="text-sm text-stone-500 mt-1">
+                      {matchingVariant.stock > 0 ? `${matchingVariant.stock} disponibles` : "Sin stock"} 
+                      {matchingVariant.weight && ` • Peso: ${matchingVariant.weight}`}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {selectedProduct.options?.sort((a,b) => a.position - b.position).map((opt) => (
+                  <div key={opt.id}>
+                    <label className="text-sm font-bold uppercase tracking-widest text-stone-900">
+                      {opt.name}
+                    </label>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {opt.values.sort((a,b) => a.position - b.position).map((val) => {
+                        const isSelected = selectedOptions[opt.name] === val.value;
+                        return (
+                          <button
+                            key={val.id}
+                            onClick={() => setSelectedOptions(prev => ({ ...prev, [opt.name]: val.value }))}
+                            className="rounded-full border-2 px-5 py-2.5 text-sm font-bold transition-all"
+                            style={{
+                              borderColor: isSelected ? primary : "#e5e7eb",
+                              color: isSelected ? primary : "#4b5563",
+                              backgroundColor: isSelected ? `${primary}10` : "transparent"
+                            }}
+                          >
+                            {val.value}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => {
+                  if (!matchingVariant) return;
+                  addToCart(selectedProduct, matchingVariant);
+                }}
+                disabled={!matchingVariant || matchingVariant.stock <= 0}
+                className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-extrabold uppercase tracking-widest text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                style={getAccentButtonStyle(primary, secondary)}
+              >
+                {!matchingVariant 
+                  ? "Selecciona opciones" 
+                  : matchingVariant.stock <= 0 
+                    ? "Agotado" 
+                    : "Agregar al carrito"}
+                <ShoppingCart className="size-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
