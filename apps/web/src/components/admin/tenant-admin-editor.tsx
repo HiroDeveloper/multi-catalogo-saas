@@ -13,6 +13,8 @@ import {
   Tag,
   TicketPercent,
   Trash2,
+  ExternalLink,
+  ChevronDown,
 } from "lucide-react";
 import {
   createAdminBanner,
@@ -33,89 +35,40 @@ import {
   updateAdminTenant,
 } from "@/lib/api/admin-client";
 import type { AdminTenantDetail, AdminQuoteRequest } from "@/lib/api/admin-types";
-
-type TenantAdminEditorProps = {
-  initialTenant: AdminTenantDetail;
-};
-
-type NewCategoryState = {
-  name: string;
-  slug: string;
-  description: string;
-};
-
-type NewProductState = {
-  name: string;
-  slug: string;
-  categoryId: string;
-  shortDescription: string;
-  price: string;
-  compareAtPrice: string;
-  stock: string;
-  imageUrl: string;
-};
-
-type NewPromotionState = {
-  name: string;
-  slug: string;
-  type: string;
-  couponCode: string;
-  priority: string;
-};
-
-const emptyCategory: NewCategoryState = {
-  name: "",
-  slug: "",
-  description: "",
-};
-
-const emptyProduct: NewProductState = {
-  name: "",
-  slug: "",
-  categoryId: "",
-  shortDescription: "",
-  price: "",
-  compareAtPrice: "",
-  stock: "0",
-  imageUrl: "",
-};
-
-const emptyPromotion: NewPromotionState = {
-  name: "",
-  slug: "",
-  type: "PERCENTAGE",
-  couponCode: "",
-  priority: "0",
-};
-
-type NewBannerState = {
-  title: string;
-  subtitle: string;
-  imageUrl: string;
-};
-
-const emptyBanner: NewBannerState = {
-  title: "",
-  subtitle: "",
-  imageUrl: "",
-};
-
 import { ProductAdminEditor } from "./product-admin-editor";
 
-export function TenantAdminEditor({
-  initialTenant,
-}: {
-  initialTenant: AdminTenantDetail;
-}) {
+type NewCategoryState = { name: string; slug: string; description: string };
+type NewProductState = { name: string; slug: string; categoryId: string; shortDescription: string; price: string; compareAtPrice: string; stock: string; imageUrl: string };
+type NewPromotionState = { name: string; slug: string; type: string; couponCode: string; priority: string };
+type NewBannerState = { title: string; subtitle: string; imageUrl: string };
+
+const emptyCategory: NewCategoryState = { name: "", slug: "", description: "" };
+const emptyProduct: NewProductState = { name: "", slug: "", categoryId: "", shortDescription: "", price: "", compareAtPrice: "", stock: "0", imageUrl: "" };
+const emptyPromotion: NewPromotionState = { name: "", slug: "", type: "PERCENTAGE", couponCode: "", priority: "0" };
+const emptyBanner: NewBannerState = { title: "", subtitle: "", imageUrl: "" };
+
+const TABS = [
+  { id: "general", label: "General", icon: Palette },
+  { id: "categories", label: "Categorías", icon: Tag },
+  { id: "products", label: "Productos", icon: Package },
+  { id: "banners", label: "Banners", icon: ImageIcon },
+  { id: "promotions", label: "Promociones", icon: TicketPercent },
+  { id: "orders", label: "Pedidos", icon: ClipboardList },
+];
+
+export function TenantAdminEditor({ initialTenant }: { initialTenant: AdminTenantDetail }) {
   const [tenant, setTenant] = useState(initialTenant);
+  const [activeTab, setActiveTab] = useState("general");
+  
   const [newCategory, setNewCategory] = useState<NewCategoryState>(emptyCategory);
   const [newProduct, setNewProduct] = useState<NewProductState>(emptyProduct);
-  const [newPromotion, setNewPromotion] =
-    useState<NewPromotionState>(emptyPromotion);
+  const [newPromotion, setNewPromotion] = useState<NewPromotionState>(emptyPromotion);
   const [newBanner, setNewBanner] = useState<NewBannerState>(emptyBanner);
+  
   const [orders, setOrders] = useState<AdminQuoteRequest[]>([]);
   const [ordersFilter, setOrdersFilter] = useState("");
   const [ordersLoading, setOrdersLoading] = useState(false);
+  
   const [feedback, setFeedback] = useState("");
   const [error, setError] = useState("");
   const [busyKey, setBusyKey] = useState("");
@@ -123,12 +76,10 @@ export function TenantAdminEditor({
 
   async function refreshTenant() {
     const nextTenant = await getAdminTenantDetailClient(tenant.id);
-
     if (!nextTenant) {
       setError("No se pudo refrescar el tenant.");
       return;
     }
-
     setTenant(nextTenant);
   }
 
@@ -136,844 +87,595 @@ export function TenantAdminEditor({
     setBusyKey(key);
     setError("");
     setFeedback("");
-
     try {
       const response = await action();
-
       if (!response) {
-        setError("La operacion no se pudo completar.");
+        setError("La operación no se pudo completar.");
         return;
       }
-
-      startTransition(() => {
-        void refreshTenant();
-      });
-      setFeedback("Cambios guardados.");
+      startTransition(() => { void refreshTenant(); });
+      setFeedback("Cambios guardados exitosamente.");
+      setTimeout(() => setFeedback(""), 3000);
     } finally {
       setBusyKey("");
     }
   }
 
-  function isBusy(key: string) {
-    return busyKey === key || isPending;
-  }
+  function isBusy(key: string) { return busyKey === key || isPending; }
 
   async function loadQuoteRequests(status?: string) {
     setOrdersFilter(status ?? "");
     setOrdersLoading(true);
     try {
       const result = await getAdminQuoteRequests(tenant.id, status);
-      if (result && result.quoteRequests) {
-        setOrders(result.quoteRequests as AdminQuoteRequest[]);
-      }
+      if (result && result.quoteRequests) setOrders(result.quoteRequests as AdminQuoteRequest[]);
     } finally {
       setOrdersLoading(false);
     }
   }
 
-  // Load orders on mount
-  useState(() => {
-    void loadQuoteRequests();
-  });
+  useState(() => { void loadQuoteRequests(); });
 
   return (
-    <main className="min-h-screen bg-[#eef3ff] p-4 text-slate-900 lg:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <header className="rounded-[28px] bg-white px-6 py-5 shadow-[0_20px_50px_rgba(23,104,229,0.08)]">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                Editor tenant
-              </div>
-              <h1 className="mt-2 text-4xl font-semibold tracking-[-0.05em] text-slate-900">
-                {tenant.name}
-              </h1>
-              <p className="mt-2 text-sm text-slate-500">
-                {tenant.subdomain}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me'} · {tenant._count.products} productos ·{" "}
-                {tenant._count.categories} categorias
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/dashboard/tenants"
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700"
-              >
-                <ArrowLeft className="size-4" />
-                Volver
+    <div className="min-h-screen bg-neutral-50 pb-20 font-sans text-neutral-900">
+      {/* Header */}
+      <header className="bg-white border-b border-neutral-200 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard/tenants" className="text-neutral-500 hover:text-neutral-900 transition-colors">
+                <ArrowLeft className="h-5 w-5" />
               </Link>
+              <div>
+                <h1 className="text-lg font-semibold tracking-tight text-neutral-900">{tenant.name}</h1>
+                <div className="text-xs font-medium text-neutral-500 flex items-center gap-2">
+                  <span>{tenant.subdomain}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me'}</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
               <a
                 href={`/t/${tenant.subdomain}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-[#1768e5] px-5 py-3 text-sm font-semibold text-white"
+                className="inline-flex items-center gap-2 rounded-md bg-white border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-colors shadow-sm"
               >
+                <ExternalLink className="h-4 w-4" />
                 Ver tienda
               </a>
             </div>
           </div>
-          {feedback ? (
-            <div className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              {feedback}
-            </div>
-          ) : null}
-          {error ? (
-            <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          ) : null}
-        </header>
-
-        <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-          <article className="rounded-[28px] bg-white p-6 shadow-[0_16px_40px_rgba(23,104,229,0.08)]">
-            <div className="flex items-center gap-3">
-              <div className="flex size-11 items-center justify-center rounded-2xl bg-[#1768e5] text-white">
-                <Palette className="size-5" />
-              </div>
-              <div>
-                <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                  Branding
-                </div>
-                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-slate-900">
-                  Configuracion visual
-                </h2>
-              </div>
-            </div>
-
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-slate-600">Nombre</span>
-                <input
-                  value={tenant.name}
-                  onChange={(event) =>
-                    setTenant((current) => ({ ...current, name: event.target.value }))
-                  }
-                  className="rounded-2xl border border-slate-200 px-4 py-3"
-                />
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-slate-600">Subdominio</span>
-                <input
-                  value={tenant.subdomain}
-                  onChange={(event) =>
-                    setTenant((current) => ({
-                      ...current,
-                      subdomain: event.target.value,
-                    }))
-                  }
-                  className="rounded-2xl border border-slate-200 px-4 py-3"
-                />
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-slate-600">WhatsApp</span>
-                <input
-                  value={tenant.whatsappNumber ?? ""}
-                  onChange={(event) =>
-                    setTenant((current) => ({
-                      ...current,
-                      whatsappNumber: event.target.value,
-                    }))
-                  }
-                  className="rounded-2xl border border-slate-200 px-4 py-3"
-                />
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-slate-600">Plan</span>
-                <input
-                  value={tenant.plan}
-                  onChange={(event) =>
-                    setTenant((current) => ({ ...current, plan: event.target.value }))
-                  }
-                  className="rounded-2xl border border-slate-200 px-4 py-3"
-                />
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-slate-600">Color primario</span>
-                <div className="flex gap-3">
-                  <input
-                    type="color"
-                    value={tenant.primaryColor ?? "#1768e5"}
-                    onChange={(event) =>
-                      setTenant((current) => ({
-                        ...current,
-                        primaryColor: event.target.value,
-                      }))
-                    }
-                    className="h-12 w-16 rounded-xl border border-slate-200 bg-transparent"
-                  />
-                  <input
-                    value={tenant.primaryColor ?? ""}
-                    onChange={(event) =>
-                      setTenant((current) => ({
-                        ...current,
-                        primaryColor: event.target.value,
-                      }))
-                    }
-                    className="flex-1 rounded-2xl border border-slate-200 px-4 py-3"
-                  />
-                </div>
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-slate-600">Color secundario</span>
-                <div className="flex gap-3">
-                  <input
-                    type="color"
-                    value={tenant.secondaryColor ?? "#25c1f6"}
-                    onChange={(event) =>
-                      setTenant((current) => ({
-                        ...current,
-                        secondaryColor: event.target.value,
-                      }))
-                    }
-                    className="h-12 w-16 rounded-xl border border-slate-200 bg-transparent"
-                  />
-                  <input
-                    value={tenant.secondaryColor ?? ""}
-                    onChange={(event) =>
-                      setTenant((current) => ({
-                        ...current,
-                        secondaryColor: event.target.value,
-                      }))
-                    }
-                    className="flex-1 rounded-2xl border border-slate-200 px-4 py-3"
-                  />
-                </div>
-              </label>
-              <label className="grid gap-2 text-sm md:col-span-2">
-                <span className="font-medium text-slate-600">Imagen cover</span>
-                <input
-                  value={tenant.coverUrl ?? ""}
-                  onChange={(event) =>
-                    setTenant((current) => ({ ...current, coverUrl: event.target.value }))
-                  }
-                  className="rounded-2xl border border-slate-200 px-4 py-3"
-                />
-              </label>
-            </div>
-
-            <button
-              type="button"
-              onClick={() =>
-                void runMutation("branding", () =>
-                  updateAdminTenant(tenant.id, {
-                    name: tenant.name,
-                    subdomain: tenant.subdomain,
-                    whatsappNumber: tenant.whatsappNumber,
-                    plan: tenant.plan,
-                    primaryColor: tenant.primaryColor,
-                    secondaryColor: tenant.secondaryColor,
-                    coverUrl: tenant.coverUrl,
-                  }),
-                )
-              }
-              disabled={isBusy("branding")}
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#1768e5] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
-            >
-              <Save className="size-4" />
-              Guardar branding
-            </button>
-          </article>
-
-          <article className="rounded-[28px] bg-white p-6 shadow-[0_16px_40px_rgba(23,104,229,0.08)]">
-            <div className="flex items-center gap-3">
-              <div className="flex size-11 items-center justify-center rounded-2xl bg-[#1768e5] text-white">
-                <Tag className="size-5" />
-              </div>
-              <div>
-                <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                  Categorias
-                </div>
-                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-slate-900">
-                  Gestion de categorias
-                </h2>
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              {tenant.categories.map((category) => (
-                <div key={category.id} className="rounded-[24px] border border-slate-200 p-4">
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <input
-                      value={category.name}
-                      onChange={(event) =>
-                        setTenant((current) => ({
-                          ...current,
-                          categories: current.categories.map((item) =>
-                            item.id === category.id
-                              ? { ...item, name: event.target.value }
-                              : item,
-                          ),
-                        }))
-                      }
-                      className="rounded-2xl border border-slate-200 px-4 py-3"
-                    />
-                    <input
-                      value={category.slug}
-                      onChange={(event) =>
-                        setTenant((current) => ({
-                          ...current,
-                          categories: current.categories.map((item) =>
-                            item.id === category.id
-                              ? { ...item, slug: event.target.value }
-                              : item,
-                          ),
-                        }))
-                      }
-                      className="rounded-2xl border border-slate-200 px-4 py-3"
-                    />
-                    <input
-                      value={category.description ?? ""}
-                      onChange={(event) =>
-                        setTenant((current) => ({
-                          ...current,
-                          categories: current.categories.map((item) =>
-                            item.id === category.id
-                              ? { ...item, description: event.target.value }
-                              : item,
-                          ),
-                        }))
-                      }
-                      className="rounded-2xl border border-slate-200 px-4 py-3 md:col-span-2"
-                    />
-                  </div>
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void runMutation(`category-${category.id}`, () =>
-                          updateAdminCategory(category.id, {
-                            name: category.name,
-                            slug: category.slug,
-                            description: category.description,
-                          }),
-                        )
-                      }
-                      disabled={isBusy(`category-${category.id}`)}
-                      className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-                    >
-                      <Save className="size-4" />
-                      Guardar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void runMutation(`category-delete-${category.id}`, () =>
-                          deleteAdminCategory(category.id),
-                        )
-                      }
-                      disabled={isBusy(`category-delete-${category.id}`)}
-                      className="inline-flex items-center gap-2 rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 disabled:opacity-50"
-                    >
-                      <Trash2 className="size-4" />
-                      Eliminar
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6 rounded-[24px] bg-slate-50 p-4">
-              <div className="text-sm font-semibold text-slate-900">Nueva categoria</div>
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <input
-                  value={newCategory.name}
-                  onChange={(event) =>
-                    setNewCategory((current) => ({
-                      ...current,
-                      name: event.target.value,
-                    }))
-                  }
-                  placeholder="Nombre"
-                  className="rounded-2xl border border-slate-200 px-4 py-3"
-                />
-                <input
-                  value={newCategory.slug}
-                  onChange={(event) =>
-                    setNewCategory((current) => ({
-                      ...current,
-                      slug: event.target.value,
-                    }))
-                  }
-                  placeholder="Slug"
-                  className="rounded-2xl border border-slate-200 px-4 py-3"
-                />
-                <input
-                  value={newCategory.description}
-                  onChange={(event) =>
-                    setNewCategory((current) => ({
-                      ...current,
-                      description: event.target.value,
-                    }))
-                  }
-                  placeholder="Descripcion"
-                  className="rounded-2xl border border-slate-200 px-4 py-3 md:col-span-2"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  void runMutation("category-create", async () => {
-                    const response = await createAdminCategory(tenant.id, newCategory);
-                    if (response) {
-                      setNewCategory(emptyCategory);
-                    }
-                    return response;
-                  })
-                }
-                disabled={isBusy("category-create")}
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#1768e5] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-              >
-                <Plus className="size-4" />
-                Crear categoria
-              </button>
-            </div>
-          </article>
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <article className="rounded-[28px] bg-white p-6 shadow-[0_16px_40px_rgba(23,104,229,0.08)]">
-            <div className="flex items-center gap-3">
-              <div className="flex size-11 items-center justify-center rounded-2xl bg-[#1768e5] text-white">
-                <Package className="size-5" />
-              </div>
-              <div>
-                <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                  Productos
-                </div>
-                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-slate-900">
-                  Gestion de catalogo
-                </h2>
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              {tenant.products.map((product) => (
-                <ProductAdminEditor
-                  key={product.id}
-                  product={product}
-                  categories={tenant.categories}
-                  isSaving={isBusy(`product-${product.id}`)}
-                  onUpdate={(updatedProduct) => {
-                    setTenant((current) => ({
-                      ...current,
-                      products: current.products.map((item) =>
-                        item.id === product.id ? updatedProduct : item
-                      ),
-                    }));
-                  }}
-                  onSave={() => {
-                    void runMutation(`product-${product.id}`, () =>
-                      updateAdminProduct(product.id, {
-                        name: product.name,
-                        slug: product.slug,
-                        categoryId: product.category?.id ?? null,
-                        shortDescription: product.shortDescription,
-                        price: product.price,
-                        compareAtPrice: product.compareAtPrice,
-                        stock: product.stock,
-                        imageUrl: product.images[0]?.url ?? "",
-                        options: product.options?.map(o => ({
-                          name: o.name,
-                          position: o.position,
-                          values: o.values.map(v => v.value)
-                        })),
-                        variants: product.variants?.map(v => ({
-                          name: v.name,
-                          sku: v.sku,
-                          price: v.price,
-                          compareAtPrice: v.compareAtPrice,
-                          stock: v.stock,
-                          weight: v.weight,
-                          imageUrl: v.image?.url || v.imageUrl,
-                          options: v.options.reduce((acc, o) => {
-                            acc[o.option?.name || o.optionId] = o.value?.value || o.valueId;
-                            return acc;
-                          }, {} as Record<string, string>)
-                        }))
-                      })
-                    );
-                  }}
-                  onDelete={() => {
-                    void runMutation(`product-delete-${product.id}`, () =>
-                      deleteAdminProduct(product.id)
-                    );
-                  }}
-                />
-              ))}
-            </div>
-
-            <div className="mt-6 rounded-[24px] bg-slate-50 p-4">
-              <div className="text-sm font-semibold text-slate-900">Nuevo producto</div>
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <input value={newProduct.name} onChange={(event) => setNewProduct((current) => ({ ...current, name: event.target.value }))} placeholder="Nombre" className="rounded-2xl border border-slate-200 px-4 py-3" />
-                <input value={newProduct.slug} onChange={(event) => setNewProduct((current) => ({ ...current, slug: event.target.value }))} placeholder="Slug" className="rounded-2xl border border-slate-200 px-4 py-3" />
-                <select value={newProduct.categoryId} onChange={(event) => setNewProduct((current) => ({ ...current, categoryId: event.target.value }))} className="rounded-2xl border border-slate-200 px-4 py-3">
-                  <option value="">Sin categoria</option>
-                  {tenant.categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-                <input value={newProduct.price} onChange={(event) => setNewProduct((current) => ({ ...current, price: event.target.value }))} placeholder="Precio" className="rounded-2xl border border-slate-200 px-4 py-3" />
-                <input value={newProduct.compareAtPrice} onChange={(event) => setNewProduct((current) => ({ ...current, compareAtPrice: event.target.value }))} placeholder="Precio anterior" className="rounded-2xl border border-slate-200 px-4 py-3" />
-                <input value={newProduct.stock} onChange={(event) => setNewProduct((current) => ({ ...current, stock: event.target.value }))} placeholder="Stock" className="rounded-2xl border border-slate-200 px-4 py-3" />
-                <input value={newProduct.imageUrl} onChange={(event) => setNewProduct((current) => ({ ...current, imageUrl: event.target.value }))} placeholder="Imagen URL" className="rounded-2xl border border-slate-200 px-4 py-3 md:col-span-2" />
-                <input value={newProduct.shortDescription} onChange={(event) => setNewProduct((current) => ({ ...current, shortDescription: event.target.value }))} placeholder="Descripcion corta" className="rounded-2xl border border-slate-200 px-4 py-3 md:col-span-2" />
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  void runMutation("product-create", async () => {
-                    const response = await createAdminProduct(tenant.id, {
-                      ...newProduct,
-                      categoryId: newProduct.categoryId || null,
-                    });
-                    if (response) {
-                      setNewProduct(emptyProduct);
-                    }
-                    return response;
-                  })
-                }
-                disabled={isBusy("product-create")}
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#1768e5] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-              >
-                <Plus className="size-4" />
-                Crear producto
-              </button>
-            </div>
-          </article>
-
-          <article className="rounded-[28px] bg-white p-6 shadow-[0_16px_40px_rgba(23,104,229,0.08)]">
-            <div className="flex items-center gap-3">
-              <div className="flex size-11 items-center justify-center rounded-2xl bg-[#1768e5] text-white">
-                <TicketPercent className="size-5" />
-              </div>
-              <div>
-                <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                  Promociones
-                </div>
-                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-slate-900">
-                  Campañas y cupones
-                </h2>
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              {tenant.promotions.map((promotion) => (
-                <div key={promotion.id} className="rounded-[24px] border border-slate-200 p-4">
-                  <div className="grid gap-3">
-                    <input value={promotion.name} onChange={(event) => setTenant((current) => ({ ...current, promotions: current.promotions.map((item) => item.id === promotion.id ? { ...item, name: event.target.value } : item) }))} className="rounded-2xl border border-slate-200 px-4 py-3" />
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <select value={promotion.type} onChange={(event) => setTenant((current) => ({ ...current, promotions: current.promotions.map((item) => item.id === promotion.id ? { ...item, type: event.target.value } : item) }))} className="rounded-2xl border border-slate-200 px-4 py-3">
-                        <option value="PERCENTAGE">PERCENTAGE</option>
-                        <option value="FIXED_AMOUNT">FIXED_AMOUNT</option>
-                        <option value="SPECIAL_PRICE">SPECIAL_PRICE</option>
-                        <option value="BUY_X_GET_Y">BUY_X_GET_Y</option>
-                      </select>
-                      <input value={promotion.couponCode ?? promotion.coupons[0]?.code ?? ""} onChange={(event) => setTenant((current) => ({ ...current, promotions: current.promotions.map((item) => item.id === promotion.id ? { ...item, couponCode: event.target.value } : item) }))} placeholder="Coupon code" className="rounded-2xl border border-slate-200 px-4 py-3" />
-                    </div>
-                  </div>
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    <button type="button" onClick={() => void runMutation(`promotion-${promotion.id}`, () => updateAdminPromotion(promotion.id, { name: promotion.name, type: promotion.type, couponCode: promotion.couponCode }))} disabled={isBusy(`promotion-${promotion.id}`)} className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
-                      <Save className="size-4" />
-                      Guardar
-                    </button>
-                    <button type="button" onClick={() => void runMutation(`promotion-delete-${promotion.id}`, () => deleteAdminPromotion(promotion.id))} disabled={isBusy(`promotion-delete-${promotion.id}`)} className="inline-flex items-center gap-2 rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 disabled:opacity-50">
-                      <Trash2 className="size-4" />
-                      Eliminar
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6 rounded-[24px] bg-slate-50 p-4">
-              <div className="text-sm font-semibold text-slate-900">Nueva promocion</div>
-              <div className="mt-4 grid gap-3">
-                <input value={newPromotion.name} onChange={(event) => setNewPromotion((current) => ({ ...current, name: event.target.value }))} placeholder="Nombre" className="rounded-2xl border border-slate-200 px-4 py-3" />
-                <div className="grid gap-3 md:grid-cols-2">
-                  <select value={newPromotion.type} onChange={(event) => setNewPromotion((current) => ({ ...current, type: event.target.value }))} className="rounded-2xl border border-slate-200 px-4 py-3">
-                    <option value="PERCENTAGE">PERCENTAGE</option>
-                    <option value="FIXED_AMOUNT">FIXED_AMOUNT</option>
-                    <option value="SPECIAL_PRICE">SPECIAL_PRICE</option>
-                    <option value="BUY_X_GET_Y">BUY_X_GET_Y</option>
-                  </select>
-                  <input value={newPromotion.couponCode} onChange={(event) => setNewPromotion((current) => ({ ...current, couponCode: event.target.value }))} placeholder="Coupon code" className="rounded-2xl border border-slate-200 px-4 py-3" />
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  void runMutation("promotion-create", async () => {
-                    const response = await createAdminPromotion(tenant.id, newPromotion);
-                    if (response) {
-                      setNewPromotion(emptyPromotion);
-                    }
-                    return response;
-                  })
-                }
-                disabled={isBusy("promotion-create")}
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#1768e5] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-              >
-                <Plus className="size-4" />
-                Crear promocion
-              </button>
-            </div>
-          </article>
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-          <article className="rounded-[28px] bg-white p-6 shadow-[0_16px_40px_rgba(23,104,229,0.08)]">
-            <div className="flex items-center gap-3">
-              <div className="flex size-11 items-center justify-center rounded-2xl bg-[#1768e5] text-white">
-                <ImageIcon className="size-5" />
-              </div>
-              <div>
-                <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                  Banners
-                </div>
-                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-slate-900">
-                  Banners del storefront
-                </h2>
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              {(tenant.banners ?? []).map((banner) => (
-                <div key={banner.id} className="rounded-[24px] border border-slate-200 p-4">
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <input
-                      value={banner.title}
-                      onChange={(event) =>
-                        setTenant((current) => ({
-                          ...current,
-                          banners: current.banners.map((item) =>
-                            item.id === banner.id
-                              ? { ...item, title: event.target.value }
-                              : item,
-                          ),
-                        }))
-                      }
-                      placeholder="Titulo"
-                      className="rounded-2xl border border-slate-200 px-4 py-3"
-                    />
-                    <input
-                      value={banner.subtitle ?? ""}
-                      onChange={(event) =>
-                        setTenant((current) => ({
-                          ...current,
-                          banners: current.banners.map((item) =>
-                            item.id === banner.id
-                              ? { ...item, subtitle: event.target.value }
-                              : item,
-                          ),
-                        }))
-                      }
-                      placeholder="Subtitulo"
-                      className="rounded-2xl border border-slate-200 px-4 py-3"
-                    />
-                    <input
-                      value={banner.imageUrl}
-                      onChange={(event) =>
-                        setTenant((current) => ({
-                          ...current,
-                          banners: current.banners.map((item) =>
-                            item.id === banner.id
-                              ? { ...item, imageUrl: event.target.value }
-                              : item,
-                          ),
-                        }))
-                      }
-                      placeholder="URL de imagen"
-                      className="rounded-2xl border border-slate-200 px-4 py-3 md:col-span-2"
-                    />
-                  </div>
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void runMutation(`banner-${banner.id}`, () =>
-                          updateAdminBanner(banner.id, {
-                            title: banner.title,
-                            subtitle: banner.subtitle,
-                            imageUrl: banner.imageUrl,
-                            status: banner.status,
-                          }),
-                        )
-                      }
-                      disabled={isBusy(`banner-${banner.id}`)}
-                      className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-                    >
-                      <Save className="size-4" />
-                      Guardar
-                    </button>
-                    <select
-                      value={banner.status}
-                      onChange={(event) =>
-                        void runMutation(`banner-status-${banner.id}`, () =>
-                          updateAdminBanner(banner.id, {
-                            status: event.target.value,
-                          }),
-                        )
-                      }
-                      className="rounded-full border border-slate-200 px-3 py-2 text-sm"
-                    >
-                      <option value="DRAFT">Borrador</option>
-                      <option value="ACTIVE">Activo</option>
-                      <option value="ARCHIVED">Archivado</option>
-                    </select>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!confirm("Seguro que quieres eliminar este banner?")) return;
-                        void runMutation(`banner-delete-${banner.id}`, () =>
-                          deleteAdminBanner(banner.id),
-                        );
-                      }}
-                      disabled={isBusy(`banner-delete-${banner.id}`)}
-                      className="inline-flex items-center gap-2 rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 disabled:opacity-50"
-                    >
-                      <Trash2 className="size-4" />
-                      Eliminar
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6 rounded-[24px] bg-slate-50 p-4">
-              <div className="text-sm font-semibold text-slate-900">Nuevo banner</div>
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <input
-                  value={newBanner.title}
-                  onChange={(event) =>
-                    setNewBanner((current) => ({
-                      ...current,
-                      title: event.target.value,
-                    }))
-                  }
-                  placeholder="Titulo"
-                  className="rounded-2xl border border-slate-200 px-4 py-3"
-                />
-                <input
-                  value={newBanner.subtitle}
-                  onChange={(event) =>
-                    setNewBanner((current) => ({
-                      ...current,
-                      subtitle: event.target.value,
-                    }))
-                  }
-                  placeholder="Subtitulo"
-                  className="rounded-2xl border border-slate-200 px-4 py-3"
-                />
-                <input
-                  value={newBanner.imageUrl}
-                  onChange={(event) =>
-                    setNewBanner((current) => ({
-                      ...current,
-                      imageUrl: event.target.value,
-                    }))
-                  }
-                  placeholder="URL de imagen"
-                  className="rounded-2xl border border-slate-200 px-4 py-3 md:col-span-2"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  void runMutation("banner-create", async () => {
-                    const response = await createAdminBanner(tenant.id, newBanner);
-                    if (response) {
-                      setNewBanner(emptyBanner);
-                    }
-                    return response;
-                  })
-                }
-                disabled={isBusy("banner-create")}
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#1768e5] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-              >
-                <Plus className="size-4" />
-                Crear banner
-              </button>
-            </div>
-          </article>
-
-          <article className="rounded-[28px] bg-white p-6 shadow-[0_16px_40px_rgba(23,104,229,0.08)]">
-            <div className="flex items-center gap-3">
-              <div className="flex size-11 items-center justify-center rounded-2xl bg-[#1768e5] text-white">
-                <ClipboardList className="size-5" />
-              </div>
-              <div>
-                <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                  Pedidos
-                </div>
-                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-slate-900">
-                  Solicitudes de pedido
-                </h2>
-              </div>
-            </div>
-
-            <div className="mt-4 flex gap-2">
-              {["", "PENDING", "SENT", "VIEWED", "CLOSED"].map((s) => (
+          
+          {/* Tabs */}
+          <div className="flex overflow-x-auto hide-scrollbar gap-1 pt-2">
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
                 <button
-                  key={s}
-                  type="button"
-                  onClick={() => void loadQuoteRequests(s || undefined)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                    ordersFilter === s
-                      ? "bg-[#1768e5] text-white"
-                      : "border border-slate-200 text-slate-600"
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                    isActive 
+                      ? "border-black text-black" 
+                      : "border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300"
                   }`}
                 >
-                  {s || "Todos"}
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
                 </button>
+              );
+            })}
+          </div>
+        </div>
+      </header>
+
+      {/* Notifications */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        {feedback && (
+          <div className="rounded-md bg-green-50 border border-green-200 p-4 mb-6">
+            <p className="text-sm font-medium text-green-800">{feedback}</p>
+          </div>
+        )}
+        {error && (
+          <div className="rounded-md bg-red-50 border border-red-200 p-4 mb-6">
+            <p className="text-sm font-medium text-red-800">{error}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Main Content Area */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        
+        {/* TAB: GENERAL */}
+        {activeTab === "general" && (
+          <div className="space-y-6 max-w-4xl">
+            <div className="bg-white shadow-sm border border-neutral-200 rounded-xl overflow-hidden">
+              <div className="px-6 py-5 border-b border-neutral-200 bg-neutral-50/50">
+                <h3 className="text-base font-semibold leading-6 text-neutral-900">Configuración General</h3>
+                <p className="mt-1 text-sm text-neutral-500">Administra la identidad básica y el branding de la tienda.</p>
+              </div>
+              <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-neutral-700">Nombre de la Empresa</label>
+                  <input
+                    type="text"
+                    value={tenant.name}
+                    onChange={(e) => setTenant({ ...tenant, name: e.target.value })}
+                    className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-neutral-700">Subdominio</label>
+                  <div className="flex rounded-md shadow-sm">
+                    <input
+                      type="text"
+                      value={tenant.subdomain}
+                      onChange={(e) => setTenant({ ...tenant, subdomain: e.target.value })}
+                      className="block w-full rounded-none rounded-l-md border-neutral-300 focus:border-black focus:ring-black sm:text-sm px-3 py-2 border"
+                    />
+                    <span className="inline-flex items-center rounded-r-md border border-l-0 border-neutral-300 bg-neutral-50 px-3 text-neutral-500 sm:text-sm">
+                      .{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me'}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-neutral-700">Número de WhatsApp (Ventas)</label>
+                  <input
+                    type="text"
+                    value={tenant.whatsappNumber ?? ""}
+                    onChange={(e) => setTenant({ ...tenant, whatsappNumber: e.target.value })}
+                    className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-neutral-700">Plan</label>
+                  <input
+                    type="text"
+                    value={tenant.plan}
+                    onChange={(e) => setTenant({ ...tenant, plan: e.target.value })}
+                    className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border bg-neutral-50"
+                    disabled
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-neutral-700">Color Primario</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={tenant.primaryColor ?? "#1768e5"}
+                      onChange={(e) => setTenant({ ...tenant, primaryColor: e.target.value })}
+                      className="h-9 w-9 rounded border border-neutral-200 cursor-pointer p-0.5"
+                    />
+                    <input
+                      type="text"
+                      value={tenant.primaryColor ?? ""}
+                      onChange={(e) => setTenant({ ...tenant, primaryColor: e.target.value })}
+                      className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-neutral-700">Color Secundario</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={tenant.secondaryColor ?? "#25c1f6"}
+                      onChange={(e) => setTenant({ ...tenant, secondaryColor: e.target.value })}
+                      className="h-9 w-9 rounded border border-neutral-200 cursor-pointer p-0.5"
+                    />
+                    <input
+                      type="text"
+                      value={tenant.secondaryColor ?? ""}
+                      onChange={(e) => setTenant({ ...tenant, secondaryColor: e.target.value })}
+                      className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="px-6 py-4 bg-neutral-50 border-t border-neutral-200 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() =>
+                    void runMutation("branding", () =>
+                      updateAdminTenant(tenant.id, {
+                        name: tenant.name,
+                        subdomain: tenant.subdomain,
+                        whatsappNumber: tenant.whatsappNumber,
+                        plan: tenant.plan,
+                        primaryColor: tenant.primaryColor,
+                        secondaryColor: tenant.secondaryColor,
+                        coverUrl: tenant.coverUrl,
+                      }),
+                    )
+                  }
+                  disabled={isBusy("branding")}
+                  className="inline-flex items-center gap-2 rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50"
+                >
+                  <Save className="h-4 w-4" />
+                  Guardar Cambios
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: CATEGORIES */}
+        {activeTab === "categories" && (
+          <div className="space-y-6">
+            <div className="bg-white shadow-sm border border-neutral-200 rounded-xl overflow-hidden">
+              <div className="px-6 py-5 border-b border-neutral-200 bg-neutral-50/50 flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-semibold leading-6 text-neutral-900">Categorías de Productos</h3>
+                  <p className="mt-1 text-sm text-neutral-500">Organiza tu catálogo para que los clientes encuentren los productos fácilmente.</p>
+                </div>
+              </div>
+              
+              <div className="divide-y divide-neutral-200">
+                {tenant.categories.length === 0 ? (
+                  <div className="p-8 text-center text-neutral-500 text-sm">No hay categorías creadas.</div>
+                ) : (
+                  tenant.categories.map((category) => (
+                    <div key={category.id} className="p-6 grid grid-cols-1 md:grid-cols-12 gap-4 items-center hover:bg-neutral-50/50 transition-colors">
+                      <div className="md:col-span-3 space-y-1">
+                        <label className="text-xs font-medium text-neutral-500">Nombre</label>
+                        <input
+                          value={category.name}
+                          onChange={(e) => setTenant(curr => ({...curr, categories: curr.categories.map(c => c.id === category.id ? {...c, name: e.target.value} : c)}))}
+                          className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-1.5 border"
+                        />
+                      </div>
+                      <div className="md:col-span-3 space-y-1">
+                        <label className="text-xs font-medium text-neutral-500">Slug</label>
+                        <input
+                          value={category.slug}
+                          onChange={(e) => setTenant(curr => ({...curr, categories: curr.categories.map(c => c.id === category.id ? {...c, slug: e.target.value} : c)}))}
+                          className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-1.5 border"
+                        />
+                      </div>
+                      <div className="md:col-span-4 space-y-1">
+                        <label className="text-xs font-medium text-neutral-500">Descripción</label>
+                        <input
+                          value={category.description ?? ""}
+                          onChange={(e) => setTenant(curr => ({...curr, categories: curr.categories.map(c => c.id === category.id ? {...c, description: e.target.value} : c)}))}
+                          className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-1.5 border"
+                        />
+                      </div>
+                      <div className="md:col-span-2 flex items-end justify-end gap-2 pt-5">
+                        <button
+                          type="button"
+                          onClick={() => void runMutation(`cat-${category.id}`, () => updateAdminCategory(category.id, { name: category.name, slug: category.slug, description: category.description }))}
+                          disabled={isBusy(`cat-${category.id}`)}
+                          className="p-1.5 text-neutral-600 hover:text-black hover:bg-neutral-100 rounded-md transition-colors"
+                          title="Guardar"
+                        >
+                          <Save className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { if(confirm("¿Eliminar?")) void runMutation(`cat-del-${category.id}`, () => deleteAdminCategory(category.id)); }}
+                          disabled={isBusy(`cat-del-${category.id}`)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              
+              <div className="px-6 py-5 bg-neutral-50 border-t border-neutral-200">
+                <h4 className="text-sm font-medium text-neutral-900 mb-4">Añadir nueva categoría</h4>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                  <div className="md:col-span-3">
+                    <input
+                      value={newCategory.name}
+                      onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                      placeholder="Nombre"
+                      className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border"
+                    />
+                  </div>
+                  <div className="md:col-span-3">
+                    <input
+                      value={newCategory.slug}
+                      onChange={(e) => setNewCategory({ ...newCategory, slug: e.target.value })}
+                      placeholder="slug-url"
+                      className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border"
+                    />
+                  </div>
+                  <div className="md:col-span-4">
+                    <input
+                      value={newCategory.description}
+                      onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
+                      placeholder="Descripción corta"
+                      className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <button
+                      type="button"
+                      onClick={() => void runMutation("cat-add", async () => {
+                        const res = await createAdminCategory(tenant.id, newCategory);
+                        if (res) setNewCategory(emptyCategory);
+                        return res;
+                      })}
+                      disabled={isBusy("cat-add") || !newCategory.name}
+                      className="w-full inline-flex justify-center items-center gap-2 rounded-md bg-black px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800 disabled:opacity-50"
+                    >
+                      <Plus className="h-4 w-4" /> Añadir
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: PRODUCTS */}
+        {activeTab === "products" && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-neutral-900">Catálogo de Productos</h2>
+                <p className="text-sm text-neutral-500 mt-1">Gestiona inventario, precios y variantes.</p>
+              </div>
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800"
+                onClick={() => {
+                  const el = document.getElementById("new-product-form");
+                  el?.scrollIntoView({ behavior: "smooth" });
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                Nuevo Producto
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {tenant.products.map((product) => (
+                <div key={product.id} className="bg-white shadow-sm border border-neutral-200 rounded-xl p-6">
+                   <ProductAdminEditor
+                    product={product}
+                    categories={tenant.categories}
+                    isSaving={isBusy(`product-${product.id}`)}
+                    onUpdate={(updatedProduct) => {
+                      setTenant((current) => ({
+                        ...current,
+                        products: current.products.map((item) =>
+                          item.id === product.id ? updatedProduct : item
+                        ),
+                      }));
+                    }}
+                    onSave={() => {
+                      void runMutation(`product-${product.id}`, () =>
+                        updateAdminProduct(product.id, {
+                          name: product.name,
+                          slug: product.slug,
+                          categoryId: product.category?.id ?? null,
+                          shortDescription: product.shortDescription,
+                          price: product.price,
+                          compareAtPrice: product.compareAtPrice,
+                          stock: product.stock,
+                          imageUrl: product.images[0]?.url ?? "",
+                          options: product.options?.map(o => ({
+                            name: o.name,
+                            position: o.position,
+                            values: o.values.map(v => v.value)
+                          })),
+                          variants: product.variants?.map(v => ({
+                            name: v.name,
+                            sku: v.sku,
+                            price: v.price,
+                            compareAtPrice: v.compareAtPrice,
+                            stock: v.stock,
+                            weight: v.weight,
+                            imageUrl: v.image?.url || v.imageUrl,
+                            options: v.options.reduce((acc, o) => {
+                              acc[o.option?.name || o.optionId] = o.value?.value || o.valueId;
+                              return acc;
+                            }, {} as Record<string, string>)
+                          }))
+                        })
+                      );
+                    }}
+                    onDelete={() => {
+                      void runMutation(`product-delete-${product.id}`, () =>
+                        deleteAdminProduct(product.id)
+                      );
+                    }}
+                  />
+                </div>
               ))}
             </div>
 
-            <div className="mt-6 max-h-[600px] space-y-4 overflow-y-auto">
-              {ordersLoading ? (
-                <div className="py-8 text-center text-sm text-slate-400">Cargando pedidos...</div>
-              ) : orders.length === 0 ? (
-                <div className="rounded-[24px] border border-dashed border-slate-200 py-8 text-center text-sm text-slate-400">
-                  No hay pedidos
+            {/* New Product Form */}
+            <div id="new-product-form" className="bg-white shadow-sm border border-neutral-200 rounded-xl overflow-hidden mt-8">
+              <div className="px-6 py-5 border-b border-neutral-200 bg-neutral-50/50">
+                <h3 className="text-base font-semibold leading-6 text-neutral-900">Crear nuevo producto (Básico)</h3>
+                <p className="mt-1 text-sm text-neutral-500">Añade los datos básicos. Podrás agregar variantes (tallas/colores) una vez creado.</p>
+              </div>
+              <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-neutral-700">Nombre</label>
+                  <input value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
                 </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-neutral-700">Slug</label>
+                  <input value={newProduct.slug} onChange={(e) => setNewProduct({ ...newProduct, slug: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-neutral-700">Categoría</label>
+                  <select value={newProduct.categoryId} onChange={(e) => setNewProduct({ ...newProduct, categoryId: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border bg-white">
+                    <option value="">Sin categoría</option>
+                    {tenant.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-neutral-700">Stock Base</label>
+                  <input type="number" value={newProduct.stock} onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-neutral-700">Precio de Venta</label>
+                  <input type="number" step="0.01" value={newProduct.price} onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-neutral-700">Precio Anterior (Tachado)</label>
+                  <input type="number" step="0.01" value={newProduct.compareAtPrice} onChange={(e) => setNewProduct({ ...newProduct, compareAtPrice: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
+                </div>
+                <div className="md:col-span-2 space-y-2">
+                  <label className="block text-sm font-medium text-neutral-700">URL Imagen Principal</label>
+                  <input value={newProduct.imageUrl} onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
+                </div>
+              </div>
+              <div className="px-6 py-4 bg-neutral-50 border-t border-neutral-200 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => void runMutation("prod-add", async () => {
+                    const res = await createAdminProduct(tenant.id, { ...newProduct, categoryId: newProduct.categoryId || null });
+                    if (res) setNewProduct(emptyProduct);
+                    return res;
+                  })}
+                  disabled={isBusy("prod-add") || !newProduct.name}
+                  className="inline-flex items-center gap-2 rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50"
+                >
+                  <Plus className="h-4 w-4" />
+                  Crear Producto
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: BANNERS & PROMOS (COMBINED) */}
+        {(activeTab === "banners" || activeTab === "promotions") && (
+          <div className="space-y-8 max-w-5xl">
+            {/* BANNERS */}
+            {activeTab === "banners" && (
+              <div className="bg-white shadow-sm border border-neutral-200 rounded-xl overflow-hidden">
+                <div className="px-6 py-5 border-b border-neutral-200 bg-neutral-50/50">
+                  <h3 className="text-base font-semibold leading-6 text-neutral-900">Banners del Storefront</h3>
+                </div>
+                <div className="divide-y divide-neutral-200">
+                  {(tenant.banners || []).map((banner) => (
+                    <div key={banner.id} className="p-6 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                      <div className="md:col-span-3 space-y-1">
+                        <label className="text-xs font-medium text-neutral-500">Título</label>
+                        <input value={banner.title} onChange={(e) => setTenant(curr => ({...curr, banners: curr.banners.map(b => b.id === banner.id ? {...b, title: e.target.value} : b)}))} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black sm:text-sm px-3 py-1.5 border" />
+                      </div>
+                      <div className="md:col-span-3 space-y-1">
+                        <label className="text-xs font-medium text-neutral-500">Imagen URL</label>
+                        <input value={banner.imageUrl} onChange={(e) => setTenant(curr => ({...curr, banners: curr.banners.map(b => b.id === banner.id ? {...b, imageUrl: e.target.value} : b)}))} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black sm:text-sm px-3 py-1.5 border" />
+                      </div>
+                      <div className="md:col-span-3 space-y-1">
+                        <label className="text-xs font-medium text-neutral-500">Estado</label>
+                        <select value={banner.status} onChange={(e) => setTenant(curr => ({...curr, banners: curr.banners.map(b => b.id === banner.id ? {...b, status: e.target.value} : b)}))} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black sm:text-sm px-3 py-1.5 border bg-white">
+                          <option value="ACTIVE">Activo</option>
+                          <option value="DRAFT">Borrador</option>
+                        </select>
+                      </div>
+                      <div className="md:col-span-3 flex justify-end gap-2 pt-5">
+                        <button type="button" onClick={() => void runMutation(`banner-${banner.id}`, () => updateAdminBanner(banner.id, { title: banner.title, subtitle: banner.subtitle, imageUrl: banner.imageUrl, status: banner.status }))} className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-sm font-medium rounded-md transition-colors">Guardar</button>
+                        <button type="button" onClick={() => void runMutation(`banner-del-${banner.id}`, () => deleteAdminBanner(banner.id))} className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-medium rounded-md transition-colors"><Trash2 className="h-4 w-4"/></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="px-6 py-5 bg-neutral-50 border-t border-neutral-200 flex gap-4 items-end">
+                  <div className="flex-1"><label className="text-xs font-medium text-neutral-500 block mb-1">Nuevo Título</label><input value={newBanner.title} onChange={e => setNewBanner({...newBanner, title: e.target.value})} className="block w-full rounded-md border-neutral-300 shadow-sm px-3 py-1.5 border" /></div>
+                  <div className="flex-1"><label className="text-xs font-medium text-neutral-500 block mb-1">URL Imagen</label><input value={newBanner.imageUrl} onChange={e => setNewBanner({...newBanner, imageUrl: e.target.value})} className="block w-full rounded-md border-neutral-300 shadow-sm px-3 py-1.5 border" /></div>
+                  <button type="button" onClick={() => void runMutation("banner-add", async () => { const res = await createAdminBanner(tenant.id, newBanner); if(res) setNewBanner(emptyBanner); return res; })} className="px-4 py-2 bg-black text-white rounded-md text-sm font-medium">Añadir Banner</button>
+                </div>
+              </div>
+            )}
+            
+            {/* PROMOTIONS */}
+            {activeTab === "promotions" && (
+              <div className="bg-white shadow-sm border border-neutral-200 rounded-xl overflow-hidden">
+                <div className="px-6 py-5 border-b border-neutral-200 bg-neutral-50/50">
+                  <h3 className="text-base font-semibold leading-6 text-neutral-900">Promociones y Cupones</h3>
+                </div>
+                <div className="divide-y divide-neutral-200">
+                  {(tenant.promotions || []).map((promo) => (
+                    <div key={promo.id} className="p-6 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                      <div className="md:col-span-3 space-y-1">
+                        <label className="text-xs font-medium text-neutral-500">Nombre</label>
+                        <input value={promo.name} onChange={(e) => setTenant(curr => ({...curr, promotions: curr.promotions.map(p => p.id === promo.id ? {...p, name: e.target.value} : p)}))} className="block w-full rounded-md border-neutral-300 shadow-sm px-3 py-1.5 border" />
+                      </div>
+                      <div className="md:col-span-3 space-y-1">
+                        <label className="text-xs font-medium text-neutral-500">Cupón (Code)</label>
+                        <input value={promo.couponCode || ''} onChange={(e) => setTenant(curr => ({...curr, promotions: curr.promotions.map(p => p.id === promo.id ? {...p, couponCode: e.target.value} : p)}))} className="block w-full rounded-md border-neutral-300 shadow-sm px-3 py-1.5 border" />
+                      </div>
+                      <div className="md:col-span-3 space-y-1">
+                        <label className="text-xs font-medium text-neutral-500">Tipo</label>
+                        <select value={promo.type} onChange={(e) => setTenant(curr => ({...curr, promotions: curr.promotions.map(p => p.id === promo.id ? {...p, type: e.target.value} : p)}))} className="block w-full rounded-md border-neutral-300 shadow-sm px-3 py-1.5 border bg-white">
+                          <option value="PERCENTAGE">Porcentaje %</option>
+                          <option value="FIXED_AMOUNT">Monto Fijo</option>
+                        </select>
+                      </div>
+                      <div className="md:col-span-3 flex justify-end gap-2 pt-5">
+                        <button type="button" onClick={() => void runMutation(`promo-${promo.id}`, () => updateAdminPromotion(promo.id, { name: promo.name, type: promo.type, couponCode: promo.couponCode }))} className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-sm font-medium rounded-md transition-colors">Guardar</button>
+                        <button type="button" onClick={() => void runMutation(`promo-del-${promo.id}`, () => deleteAdminPromotion(promo.id))} className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-medium rounded-md transition-colors"><Trash2 className="h-4 w-4"/></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="px-6 py-5 bg-neutral-50 border-t border-neutral-200 flex gap-4 items-end">
+                  <div className="flex-1"><label className="text-xs font-medium text-neutral-500 block mb-1">Nombre Promoción</label><input value={newPromotion.name} onChange={e => setNewPromotion({...newPromotion, name: e.target.value})} className="block w-full rounded-md border-neutral-300 shadow-sm px-3 py-1.5 border" /></div>
+                  <div className="flex-1"><label className="text-xs font-medium text-neutral-500 block mb-1">Código Cupón</label><input value={newPromotion.couponCode} onChange={e => setNewPromotion({...newPromotion, couponCode: e.target.value})} className="block w-full rounded-md border-neutral-300 shadow-sm px-3 py-1.5 border" /></div>
+                  <button type="button" onClick={() => void runMutation("promo-add", async () => { const res = await createAdminPromotion(tenant.id, newPromotion); if(res) setNewPromotion(emptyPromotion); return res; })} className="px-4 py-2 bg-black text-white rounded-md text-sm font-medium">Crear Promoción</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB: ORDERS */}
+        {activeTab === "orders" && (
+          <div className="bg-white shadow-sm border border-neutral-200 rounded-xl overflow-hidden">
+            <div className="px-6 py-5 border-b border-neutral-200 bg-neutral-50/50 flex items-center justify-between">
+              <h3 className="text-base font-semibold leading-6 text-neutral-900">Solicitudes y Pedidos (B2B)</h3>
+              <div className="flex gap-2">
+                {["", "PENDING", "SENT", "VIEWED", "CLOSED"].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => void loadQuoteRequests(s || undefined)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                      ordersFilter === s ? "bg-black text-white" : "bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                    }`}
+                  >
+                    {s === "" ? "Todos" : s === "PENDING" ? "Pendientes" : s === "SENT" ? "Enviados" : s === "VIEWED" ? "Vistos" : "Cerrados"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="divide-y divide-neutral-200">
+              {ordersLoading ? (
+                <div className="p-12 text-center text-neutral-500">Cargando historial de pedidos...</div>
+              ) : orders.length === 0 ? (
+                <div className="p-12 text-center text-neutral-500">No hay pedidos registrados.</div>
               ) : (
                 orders.map((order) => (
-                  <div key={order.id} className="rounded-[24px] border border-slate-200 p-4">
-                    <div className="flex items-start justify-between gap-4">
+                  <div key={order.id} className="p-6">
+                    <div className="flex items-start justify-between mb-4">
                       <div>
-                        <div className="text-sm font-semibold text-slate-900">
-                          {order.customerName}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          {order.customerPhone}
-                          {order.customerEmail ? ` · ${order.customerEmail}` : ""}
-                        </div>
-                        <div className="mt-1 text-xs text-slate-400">
-                          {new Date(order.createdAt).toLocaleDateString("es-CO", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </div>
+                        <h4 className="text-sm font-semibold text-neutral-900">{order.customerName}</h4>
+                        <p className="text-sm text-neutral-500">{order.customerPhone} {order.customerEmail ? `· ${order.customerEmail}` : ""}</p>
+                        <p className="text-xs text-neutral-400 mt-1">{new Date(order.createdAt).toLocaleString('es-CO')}</p>
                       </div>
                       <select
                         value={order.status}
-                        onChange={(event) =>
-                          void runMutation(`order-status-${order.id}`, async () => {
-                            const result = await updateAdminQuoteRequestStatus(
-                              order.id,
-                              event.target.value,
-                            );
-                            if (result) {
-                              void loadQuoteRequests(ordersFilter || undefined);
-                            }
-                            return result;
-                          })
-                        }
-                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold"
+                        onChange={(e) => void runMutation(`order-status-${order.id}`, async () => {
+                          const result = await updateAdminQuoteRequestStatus(order.id, e.target.value);
+                          if(result) void loadQuoteRequests(ordersFilter || undefined);
+                          return result;
+                        })}
+                        className="rounded-md border-neutral-300 shadow-sm focus:border-black sm:text-sm px-3 py-1.5 border bg-white"
                       >
                         <option value="PENDING">Pendiente</option>
                         <option value="SENT">Enviado</option>
@@ -981,34 +683,35 @@ export function TenantAdminEditor({
                         <option value="CLOSED">Cerrado</option>
                       </select>
                     </div>
-                    <div className="mt-3 space-y-1 border-t border-slate-100 pt-3">
-                      {order.items.map((item) => (
-                        <div key={item.id} className="flex justify-between text-sm">
-                          <span className="text-slate-700">
-                            {item.quantity}x {item.productName}
-                          </span>
-                          <span className="font-medium text-slate-900">
-                            ${item.unitPrice ?? "0.00"}
-                          </span>
-                        </div>
-                      ))}
+                    
+                    <div className="bg-neutral-50 rounded-lg p-4 border border-neutral-100">
+                      <div className="space-y-2 mb-3">
+                        {order.items.map((item) => (
+                          <div key={item.id} className="flex justify-between text-sm">
+                            <span className="text-neutral-700">{item.quantity}x {item.productName}</span>
+                            <span className="font-medium text-neutral-900">${item.unitPrice ?? "0.00"}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex justify-between border-t border-neutral-200 pt-3 text-sm font-bold text-neutral-900">
+                        <span>Total de Compra</span>
+                        <span>${order.total ?? "0.00"} {order.currency}</span>
+                      </div>
                     </div>
-                    <div className="mt-3 flex justify-between border-t border-slate-100 pt-3 text-sm font-bold text-slate-900">
-                      <span>Total</span>
-                      <span>${order.total ?? "0.00"} {order.currency}</span>
-                    </div>
-                    {order.message ? (
-                      <div className="mt-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                    {order.message && (
+                      <div className="mt-3 text-sm text-neutral-600 bg-amber-50 p-3 rounded-md border border-amber-100">
+                        <span className="font-semibold text-amber-900 block mb-1">Nota del cliente:</span>
                         {order.message}
                       </div>
-                    ) : null}
+                    )}
                   </div>
                 ))
               )}
             </div>
-          </article>
-        </section>
-      </div>
-    </main>
+          </div>
+        )}
+
+      </main>
+    </div>
   );
 }

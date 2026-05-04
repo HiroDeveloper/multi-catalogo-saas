@@ -38,9 +38,9 @@ export default async function DashboardPage() {
 
   if (!data) {
     return (
-      <main className="min-h-screen bg-[#eef3ff] p-8">
-        <div className="mx-auto max-w-5xl rounded-[32px] bg-white p-10">
-          <h1 className="text-4xl font-semibold tracking-[-0.04em] text-slate-900">
+      <main className="min-h-screen bg-neutral-50 p-8">
+        <div className="mx-auto max-w-5xl rounded-xl border border-neutral-200 bg-white p-10">
+          <h1 className="text-4xl font-semibold tracking-[-0.04em] text-neutral-900">
             Dashboard no disponible
           </h1>
         </div>
@@ -49,12 +49,12 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-6xl p-6">
       <header className="mb-8 flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+        <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
           Overview
         </h1>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-neutral-500">
           Métricas generales de todo el ecosistema de tiendas.
         </p>
       </header>
@@ -63,13 +63,13 @@ export default async function DashboardPage() {
         {statCards.map(({ key, label, icon: Icon }) => (
           <article
             key={key}
-            className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+            className="flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-5 shadow-sm"
           >
-            <div className="flex items-center gap-3 text-sm font-medium text-slate-500">
-              <Icon className="size-4 text-blue-600" />
+            <div className="flex items-center gap-3 text-sm font-medium text-neutral-500">
+              <Icon className="h-4 w-4 text-neutral-700" />
               {label}
             </div>
-            <div className="mt-4 text-3xl font-semibold tracking-tight text-slate-900">
+            <div className="mt-4 text-3xl font-semibold tracking-tight text-neutral-900">
               {data.metrics[key]}
             </div>
           </article>
