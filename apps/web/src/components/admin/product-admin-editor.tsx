@@ -110,20 +110,20 @@ export function ProductAdminEditor({
   };
 
   return (
-    <div className="rounded-[24px] border border-slate-200 bg-white p-4 overflow-hidden">
+    <div className="rounded-xl border border-neutral-200 bg-white p-4 overflow-hidden">
       {/* Header Row */}
       <div className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_0.5fr_auto_auto]">
         <input
           value={product.name}
           onChange={(e) => onUpdate({ ...product, name: e.target.value })}
           placeholder="Nombre del producto"
-          className="rounded-xl border border-slate-200 px-4 py-2"
+          className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
         />
         <input
           value={product.slug}
           onChange={(e) => onUpdate({ ...product, slug: e.target.value })}
           placeholder="Slug"
-          className="rounded-xl border border-slate-200 px-4 py-2 text-sm"
+          className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
         />
         <select
           value={product.category?.id ?? ""}
@@ -131,7 +131,7 @@ export function ProductAdminEditor({
             const cat = categories.find((c) => c.id === e.target.value);
             onUpdate({ ...product, category: cat ?? null });
           }}
-          className="rounded-xl border border-slate-200 px-4 py-2 text-sm"
+          className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm bg-white"
         >
           <option value="">Sin categoría</option>
           {categories.map((c) => (
@@ -142,51 +142,51 @@ export function ProductAdminEditor({
           value={String(product.price)}
           onChange={(e) => onUpdate({ ...product, price: e.target.value })}
           placeholder="Precio"
-          className="rounded-xl border border-slate-200 px-4 py-2"
+          className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
         />
         <button
           onClick={() => onSave(product)}
           disabled={isSaving}
-          className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          className="rounded-md bg-neutral-100 px-4 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200 disabled:opacity-50 transition-colors"
         >
-          Guardar
+          {isSaving ? "Guardando..." : "Guardar"}
         </button>
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex items-center justify-center rounded-xl bg-slate-100 px-3 py-2 text-slate-600 hover:bg-slate-200"
+          className="flex items-center justify-center rounded-md bg-white border border-neutral-200 px-2 py-1.5 text-neutral-600 hover:bg-neutral-50 transition-colors"
         >
-          {expanded ? <ChevronUp className="size-5" /> : <ChevronDown className="size-5" />}
+          {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
       </div>
 
       {/* Expanded Area */}
       {expanded && (
-        <div className="mt-6 border-t border-slate-100 pt-6">
+        <div className="mt-6 border-t border-neutral-100 pt-6">
           <div className="grid gap-6 lg:grid-cols-2">
             
             {/* General Info */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-slate-900">Información General</h3>
+              <h3 className="text-sm font-semibold text-neutral-900">Información General</h3>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="text-xs text-slate-500">Precio Comparación (Descuento)</label>
+                  <label className="text-xs font-medium text-neutral-500">Precio Comparación (Tachado)</label>
                   <input
                     value={String(product.compareAtPrice ?? "")}
                     onChange={(e) => onUpdate({ ...product, compareAtPrice: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-500">Stock Base</label>
+                  <label className="text-xs font-medium text-neutral-500">Stock Base</label>
                   <input
                     type="number"
                     value={product.stock}
                     onChange={(e) => onUpdate({ ...product, stock: Number(e.target.value) })}
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-xs text-slate-500">Imagen Principal (URL)</label>
+                  <label className="text-xs font-medium text-neutral-500">Imagen Principal (URL)</label>
                   <input
                     value={product.images[0]?.url ?? ""}
                     onChange={(e) => {
@@ -195,44 +195,44 @@ export function ProductAdminEditor({
                       else imgs.push({ id: `new-img`, url: e.target.value, alt: "" });
                       onUpdate({ ...product, images: imgs });
                     }}
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
                   />
                 </div>
               </div>
             </div>
 
             {/* Options Builder */}
-            <div className="space-y-4 rounded-xl bg-slate-50 p-4">
+            <div className="space-y-4 rounded-lg bg-neutral-50 border border-neutral-100 p-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-900">Opciones del Producto</h3>
-                <button onClick={addOption} className="text-xs font-medium text-blue-600 hover:text-blue-700">
-                  + Añadir Opción
+                <h3 className="text-sm font-semibold text-neutral-900">Opciones (Color, Talla, etc)</h3>
+                <button onClick={addOption} className="text-xs font-medium text-black hover:underline flex items-center gap-1">
+                  <Plus className="h-3 w-3" /> Añadir Opción
                 </button>
               </div>
               
               <div className="space-y-3">
                 {product.options?.map((opt, oIdx) => (
-                  <div key={opt.id} className="rounded-lg border border-slate-200 bg-white p-3">
+                  <div key={opt.id} className="rounded-md border border-neutral-200 bg-white p-3 shadow-sm">
                     <div className="flex items-center gap-2">
                       <input
                         value={opt.name}
                         onChange={(e) => updateOptionName(oIdx, e.target.value)}
-                        placeholder="Ej. Color, Talla"
-                        className="flex-1 rounded border border-slate-200 px-2 py-1 text-sm font-medium"
+                        placeholder="Ej. Color, Talla, Peso"
+                        className="flex-1 rounded border border-neutral-300 px-2 py-1.5 text-sm font-medium"
                       />
-                      <button onClick={() => removeOption(oIdx)} className="text-red-500">
-                        <Trash2 className="size-4" />
+                      <button onClick={() => removeOption(oIdx)} className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-md transition-colors">
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
-                    <div className="mt-2 flex flex-wrap gap-2">
+                    <div className="mt-3 flex flex-wrap gap-2">
                       {opt.values.map(v => (
-                        <span key={v.id} className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs text-slate-700">
+                        <span key={v.id} className="rounded-full bg-neutral-100 border border-neutral-200 px-2.5 py-0.5 text-xs font-medium text-neutral-700">
                           {v.value}
                         </span>
                       ))}
                       <input
                         placeholder="Añadir valor y presionar Enter..."
-                        className="min-w-[120px] flex-1 rounded border-none bg-transparent px-1 py-0.5 text-xs text-slate-600 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+                        className="min-w-[200px] flex-1 rounded border border-dashed border-neutral-300 bg-transparent px-2 py-1 text-xs text-neutral-700 placeholder:text-neutral-400 focus:border-black focus:ring-black"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
@@ -245,7 +245,7 @@ export function ProductAdminEditor({
                   </div>
                 ))}
                 {(!product.options || product.options.length === 0) && (
-                  <p className="text-xs text-slate-500">Este producto no tiene opciones (ej. tallas o colores).</p>
+                  <p className="text-xs text-neutral-500">Agrega opciones si tu producto viene en diferentes versiones.</p>
                 )}
               </div>
             </div>
@@ -255,26 +255,26 @@ export function ProductAdminEditor({
           {(product.options && product.options.length > 0) && (
             <div className="mt-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-900">Variantes</h3>
-                <button onClick={addVariant} className="text-xs font-medium text-blue-600 hover:text-blue-700">
-                  + Añadir Variante Manual
+                <h3 className="text-sm font-semibold text-neutral-900">Variantes y Combinaciones</h3>
+                <button onClick={addVariant} className="text-xs font-medium text-black hover:underline flex items-center gap-1">
+                  <Plus className="h-3 w-3" /> Añadir Variante
                 </button>
               </div>
 
-              <div className="overflow-x-auto rounded-xl border border-slate-200">
-                <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-                  <thead className="bg-slate-50">
+              <div className="overflow-x-auto rounded-lg border border-neutral-200">
+                <table className="min-w-full divide-y divide-neutral-200 text-left text-sm">
+                  <thead className="bg-neutral-50">
                     <tr>
-                      <th className="px-3 py-2 font-medium text-slate-500">Opciones</th>
-                      <th className="px-3 py-2 font-medium text-slate-500">Nombre Variante</th>
-                      <th className="px-3 py-2 font-medium text-slate-500 w-24">Precio</th>
-                      <th className="px-3 py-2 font-medium text-slate-500 w-20">Stock</th>
-                      <th className="px-3 py-2 font-medium text-slate-500 w-20">Peso</th>
-                      <th className="px-3 py-2 font-medium text-slate-500">Imagen URL</th>
-                      <th className="px-3 py-2"></th>
+                      <th className="px-3 py-2 text-xs font-medium text-neutral-500">Opciones</th>
+                      <th className="px-3 py-2 text-xs font-medium text-neutral-500">Nombre/SKU</th>
+                      <th className="px-3 py-2 text-xs font-medium text-neutral-500 w-24">Precio</th>
+                      <th className="px-3 py-2 text-xs font-medium text-neutral-500 w-20">Stock</th>
+                      <th className="px-3 py-2 text-xs font-medium text-neutral-500 w-20">Peso</th>
+                      <th className="px-3 py-2 text-xs font-medium text-neutral-500">Imagen Específica (Opcional)</th>
+                      <th className="px-3 py-2 text-xs font-medium text-neutral-500"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200 bg-white">
+                  <tbody className="divide-y divide-neutral-200 bg-white">
                     {product.variants?.map((v, vIdx) => {
                       const vOpts = v.options.reduce((acc, o) => {
                         acc[o.option?.name || o.optionId] = o.value?.value || o.valueId;
@@ -282,17 +282,17 @@ export function ProductAdminEditor({
                       }, {} as Record<string, string>);
 
                       return (
-                        <tr key={v.id}>
+                        <tr key={v.id} className="hover:bg-neutral-50/50 transition-colors">
                           <td className="px-3 py-2">
-                            <div className="flex flex-col gap-1">
+                            <div className="flex flex-col gap-1.5">
                               {product.options?.map(opt => (
                                 <select
                                   key={opt.id}
                                   value={vOpts[opt.name] || ""}
                                   onChange={(e) => updateVariantOption(vIdx, opt.name, e.target.value)}
-                                  className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
+                                  className="w-full rounded border border-neutral-300 px-2 py-1 text-[11px] bg-white"
                                 >
-                                  <option value="">Seleccionar {opt.name}</option>
+                                  <option value="">{opt.name}</option>
                                   {opt.values.map(val => (
                                     <option key={val.id} value={val.value}>{val.value}</option>
                                   ))}
@@ -300,19 +300,26 @@ export function ProductAdminEditor({
                               ))}
                             </div>
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-2 space-y-1">
                             <input
                               value={v.name}
                               onChange={(e) => updateVariant(vIdx, "name", e.target.value)}
-                              className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
+                              className="w-full rounded border border-neutral-300 px-2 py-1 text-xs"
+                              placeholder="Nombre variante"
+                            />
+                            <input
+                              value={v.sku || ""}
+                              onChange={(e) => updateVariant(vIdx, "sku", e.target.value)}
+                              className="w-full rounded border border-neutral-300 px-2 py-1 text-[11px]"
+                              placeholder="SKU"
                             />
                           </td>
                           <td className="px-3 py-2">
                             <input
                               value={v.price === null ? "" : String(v.price)}
                               onChange={(e) => updateVariant(vIdx, "price", e.target.value)}
-                              className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
-                              placeholder="Opcional"
+                              className="w-full rounded border border-neutral-300 px-2 py-1 text-xs"
+                              placeholder="Predeterminado"
                             />
                           </td>
                           <td className="px-3 py-2">
@@ -320,14 +327,14 @@ export function ProductAdminEditor({
                               type="number"
                               value={v.stock}
                               onChange={(e) => updateVariant(vIdx, "stock", Number(e.target.value))}
-                              className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
+                              className="w-full rounded border border-neutral-300 px-2 py-1 text-xs"
                             />
                           </td>
                           <td className="px-3 py-2">
                             <input
                               value={v.weight === null ? "" : String(v.weight)}
                               onChange={(e) => updateVariant(vIdx, "weight", e.target.value)}
-                              className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
+                              className="w-full rounded border border-neutral-300 px-2 py-1 text-xs"
                               placeholder="kg/lb"
                             />
                           </td>
@@ -335,13 +342,13 @@ export function ProductAdminEditor({
                             <input
                               value={v.image?.url || v.imageUrl || ""}
                               onChange={(e) => updateVariant(vIdx, "imageUrl", e.target.value)}
-                              className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
+                              className="w-full rounded border border-neutral-300 px-2 py-1 text-[11px]"
                               placeholder="https://..."
                             />
                           </td>
                           <td className="px-3 py-2 text-right">
-                            <button onClick={() => removeVariant(vIdx)} className="text-red-500 hover:text-red-700">
-                              <Trash2 className="size-4" />
+                            <button onClick={() => removeVariant(vIdx)} className="text-red-500 hover:bg-red-50 p-1.5 rounded-md transition-colors" title="Eliminar Variante">
+                              <Trash2 className="h-4 w-4" />
                             </button>
                           </td>
                         </tr>
@@ -353,12 +360,12 @@ export function ProductAdminEditor({
             </div>
           )}
 
-          <div className="mt-4 flex justify-end">
+          <div className="mt-8 flex justify-end border-t border-neutral-100 pt-4">
             <button
-              onClick={() => onDelete(product.id)}
-              className="text-xs font-semibold text-red-500 hover:text-red-700"
+              onClick={() => { if(confirm("¿Seguro que deseas eliminar el producto entero?")) onDelete(product.id) }}
+              className="text-xs font-semibold text-red-600 hover:text-red-800"
             >
-              Eliminar Producto
+              Eliminar Producto Definitivamente
             </button>
           </div>
         </div>
