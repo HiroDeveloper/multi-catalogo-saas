@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: multi-catalogo-api
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: cd ../.. && pnpm install --frozen-lockfile && pnpm --filter api build
+    startCommand: cd apps/api && node dist/main.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+      - key: API_PREFIX
+        value: api
+      - key: PLATFORM_ROOT_DOMAIN
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        sync: false
+      - key: R2_PUBLIC_URL
+        sync: false
+      - key: POSTHOG_API_KEY
+        sync: false
+      - key: POSTHOG_HOST
+        sync: false

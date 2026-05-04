@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: multi-catalogo-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: multi_catalogo
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d multi_catalogo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: multi-catalogo-api
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      API_PREFIX: api
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/multi_catalogo
+      PLATFORM_ROOT_DOMAIN: ${PLATFORM_ROOT_DOMAIN:-midominio.local}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY}
+      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

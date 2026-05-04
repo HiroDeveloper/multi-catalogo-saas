@@ -1,0 +1,308 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TenantStatus {
+  ACTIVE
+  DRAFT
+  SUSPENDED
+}
+
+enum DomainType {
+  SUBDOMAIN
+  CUSTOM
+}
+
+enum DomainVerificationStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+enum SslStatus {
+  PENDING
+  ACTIVE
+  FAILED
+}
+
+enum MembershipRole {
+  SUPER_ADMIN
+  TENANT_OWNER
+  TENANT_STAFF
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum BannerStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum QuoteRequestStatus {
+  PENDING
+  SENT
+  VIEWED
+  CLOSED
+}
+
+enum PromotionType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  SPECIAL_PRICE
+  BUY_X_GET_Y
+}
+
+enum PromotionStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  EXPIRED
+}
+
+enum CouponStatus {
+  ACTIVE
+  DISABLED
+  EXPIRED
+}
+
+model Tenant {
+  id             String         @id @default(cuid())
+  name           String
+  slug           String         @unique
+  subdomain      String         @unique
+  status         TenantStatus   @default(DRAFT)
+  plan           String         @default("starter")
+  logoUrl        String?
+  coverUrl       String?
+  primaryColor   String?
+  secondaryColor String?
+  whatsappNumber String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  banners        Banner[]
+  categories     Category[]
+  coupons        Coupon[]
+  domains        Domain[]
+  memberships    Membership[]
+  products       Product[]
+  promotions     Promotion[]
+  quoteRequests  QuoteRequest[]
+}
+
+model Domain {
+  id                 String                   @id @default(cuid())
+  tenantId           String
+  hostname           String                   @unique
+  type               DomainType               @default(SUBDOMAIN)
+  isPrimary          Boolean                  @default(false)
+  verificationStatus DomainVerificationStatus @default(PENDING)
+  sslStatus          SslStatus                @default(PENDING)
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  tenant             Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model User {
+  id             String       @id @default(cuid())
+  supabaseUserId String       @unique
+  email          String       @unique
+  displayName    String?
+  avatarUrl      String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  memberships    Membership[]
+}
+
+model Membership {
+  id        String         @id @default(cuid())
+  userId    String
+  tenantId  String?
+  role      MembershipRole
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  tenant     Tenant?       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, role])
+  @@unique([userId, tenantId, role])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  tenantId    String
+  name        String
+  slug        String
+  description String?
+  position    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, position])
+  @@unique([tenantId, slug])
+}
+
+model Product {
+  id               String        @id @default(cuid())
+  tenantId         String
+  categoryId       String?
+  name             String
+  slug             String
+  shortDescription String?
+  description      String?
+  sku              String?
+  price            Decimal       @db.Decimal(10, 2)
+  compareAtPrice   Decimal?      @db.Decimal(10, 2)
+  currency         String        @default("USD")
+  status           ProductStatus @default(DRAFT)
+  featured         Boolean       @default(false)
+  stock            Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  category         Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  images           ProductImage[]
+  tenant           Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  quoteItems       QuoteRequestItem[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, categoryId])
+  @@unique([tenantId, slug])
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  tenantId  String
+  productId String
+  url       String
+  alt       String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, sortOrder])
+  @@index([tenantId])
+}
+
+model Banner {
+  id        String       @id @default(cuid())
+  tenantId  String
+  title     String
+  subtitle  String?
+  imageUrl  String
+  linkUrl   String?
+  position  Int          @default(0)
+  status    BannerStatus @default(DRAFT)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  tenant    Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status, position])
+}
+
+model QuoteRequest {
+  id            String             @id @default(cuid())
+  tenantId      String
+  customerName  String
+  customerPhone String
+  customerEmail String?
+  message       String?
+  source        String             @default("whatsapp")
+  status        QuoteRequestStatus @default(PENDING)
+  subtotal      Decimal?           @db.Decimal(10, 2)
+  total         Decimal?           @db.Decimal(10, 2)
+  currency      String             @default("USD")
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  items         QuoteRequestItem[]
+  tenant        Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status, createdAt])
+}
+
+model QuoteRequestItem {
+  id             String       @id @default(cuid())
+  quoteRequestId String
+  productId      String?
+  productName    String
+  quantity       Int          @default(1)
+  unitPrice      Decimal?     @db.Decimal(10, 2)
+  variantName    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  product        Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+  quoteRequest   QuoteRequest @relation(fields: [quoteRequestId], references: [id], onDelete: Cascade)
+
+  @@index([quoteRequestId])
+}
+
+model Promotion {
+  id         String          @id @default(cuid())
+  tenantId   String
+  name       String
+  slug       String
+  type       PromotionType
+  status     PromotionStatus @default(DRAFT)
+  startsAt   DateTime?
+  endsAt     DateTime?
+  priority   Int             @default(0)
+  bannerUrl  String?
+  couponCode String?
+  stackable  Boolean         @default(false)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  coupons    Coupon[]
+  rules      PromotionRule[]
+  tenant     Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status, startsAt, endsAt])
+  @@unique([tenantId, slug])
+}
+
+model PromotionRule {
+  id          String     @id @default(cuid())
+  promotionId String
+  scope       String
+  operator    String
+  value       String?
+  minQuantity Int?
+  minAmount   Decimal?   @db.Decimal(10, 2)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  promotion   Promotion  @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+
+  @@index([promotionId])
+}
+
+model Coupon {
+  id                 String       @id @default(cuid())
+  tenantId           String
+  code               String       @unique
+  status             CouponStatus @default(ACTIVE)
+  maxUses            Int?
+  maxUsesPerCustomer Int?
+  startsAt           DateTime?
+  endsAt             DateTime?
+  promotionId        String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  promotion          Promotion?   @relation(fields: [promotionId], references: [id], onDelete: SetNull)
+  tenant             Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+}
