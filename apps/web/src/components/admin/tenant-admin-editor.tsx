@@ -196,11 +196,7 @@ export function TenantAdminEditor({ initialTenant }: TenantAdminEditorProps) {
                 Volver
               </Link>
               <a
-                href={
-                  (process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me') === 'vercel.app' || (process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me').includes('.vercel.app')
-                    ? `/t/${tenant.subdomain}`
-                    : `http${(process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me') !== 'lvh.me' ? 's' : ''}://${tenant.subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me'}${(process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me') === 'lvh.me' ? ':3000' : ''}/`
-                }
+                href={`/t/${tenant.subdomain}`}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-full bg-[#1768e5] px-5 py-3 text-sm font-semibold text-white"

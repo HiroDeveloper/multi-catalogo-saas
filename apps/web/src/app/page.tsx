@@ -8,6 +8,9 @@ import {
   Sparkles,
   Store,
   Zap,
+  Package,
+  Tags,
+  Globe,
 } from "lucide-react";
 import {
   getMarketplaceHome,
@@ -31,16 +34,8 @@ function formatCurrency(value: unknown) {
 }
 
 function buildTenantHref(rootDomain: string, tenantSlug: string) {
-  // En Vercel no tenemos wildcard subdomains por defecto
-  if (rootDomain === "vercel.app" || rootDomain.includes(".vercel.app")) {
-    return `/t/${tenantSlug}`;
-  }
-
-  const isLocal = rootDomain === "lvh.me" || rootDomain.endsWith(".local");
-  const protocol = isLocal ? "http" : "https";
-  const port = isLocal ? ":3000" : "";
-
-  return `${protocol}://${tenantSlug}.${rootDomain}${port}/`;
+  // Para evitar problemas de DNS y dominios en Vercel, forzamos ruta relativa
+  return `/t/${tenantSlug}`;
 }
 
 export default async function MarketplacePage() {
@@ -73,15 +68,15 @@ export default async function MarketplacePage() {
       <header className="sticky top-0 z-30 border-b border-slate-200/60 glass">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 lg:px-8">
           <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-2xl bg-[#1768e5] text-white shadow-[0_10px_30px_rgba(23,104,229,0.35)]">
+            <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-xl shadow-slate-900/10">
               <Store className="size-5" />
             </div>
             <div>
-              <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                Marketplace
+              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                Plataforma
               </div>
-              <div className="text-lg font-semibold tracking-[-0.02em]">
-                Multi Catalogo
+              <div className="text-lg font-bold tracking-tight text-slate-900">
+                MultiCatálogo
               </div>
             </div>
           </div>
@@ -110,26 +105,24 @@ export default async function MarketplacePage() {
           <section className="overflow-hidden rounded-[36px] bg-white shadow-[0_24px_60px_rgba(23,104,229,0.12)]">
             <div className="grid gap-6 p-6 lg:grid-cols-[1.1fr_0.9fr] lg:p-8">
               <div className="space-y-6">
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#1768e5]/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#1768e5]">
-                  <Sparkles className="size-3" />
-                  Multiempresa
+                <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 shadow-sm">
+                  <Sparkles className="size-3 text-amber-500" />
+                  Plataforma B2B & B2C
                 </div>
                 <div>
-                  <h1 className="max-w-2xl text-5xl font-semibold tracking-[-0.06em] text-slate-900 lg:text-6xl">
-                    Marketplace principal con tiendas por subdominio y admin central.
+                  <h1 className="max-w-2xl text-5xl font-bold tracking-tight text-slate-900 lg:text-[64px] lg:leading-[1.1]">
+                    Vende más conectando tu catálogo al mundo.
                   </h1>
-                  <p className="mt-4 max-w-xl text-base leading-8 text-slate-600">
-                    Portal principal para descubrir tiendas, promociones y productos.
-                    Cada empresa vive en su propio subdominio y el superadmin opera
-                    todo desde un panel central.
+                  <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
+                    Crea tu tienda en línea en segundos, gestiona productos, inventario y promociones desde un panel centralizado con la mejor experiencia de usuario.
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap items-center gap-4">
                   <Link
                     href="/dashboard"
-                    className="inline-flex items-center gap-2 rounded-full bg-[#1768e5] px-5 py-3 text-sm font-semibold text-white"
+                    className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800"
                   >
-                    Ver panel admin
+                    Acceder al Panel
                     <ChevronRight className="size-4" />
                   </Link>
                   {heroTenants[0] ? (
@@ -149,29 +142,29 @@ export default async function MarketplacePage() {
                   <a
                     key={tenant.id}
                     href={buildTenantHref(env.rootDomain, tenant.slug)}
-                    className="group overflow-hidden rounded-[28px] bg-[#1768e5] text-white shadow-[0_20px_50px_rgba(23,104,229,0.2)]"
+                    className="group relative overflow-hidden rounded-[28px] bg-slate-900 text-white shadow-2xl transition hover:shadow-slate-900/20"
                   >
-                    <div className="relative min-h-[220px]">
+                    <div className="relative min-h-[280px]">
                       {tenant.banners[0]?.imageUrl ? (
                         <Image
                           src={tenant.banners[0].imageUrl}
                           alt={tenant.banners[0].title}
                           fill
-                          className="object-cover transition duration-500 group-hover:scale-105"
+                          className="object-cover opacity-80 transition duration-700 group-hover:scale-105 group-hover:opacity-100"
                           sizes="50vw"
                         />
                       ) : null}
-                      <div className="absolute inset-0 bg-gradient-to-r from-[#1768e5]/88 via-[#1768e5]/62 to-[#1768e5]/20" />
-                      <div className="relative z-10 flex min-h-[220px] flex-col justify-end p-5">
-                        <div className="inline-flex w-fit rounded-full bg-white/12 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-white/90">
-                          {tenant.categories[0]?.name ?? "Catalogo"}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+                      <div className="relative z-10 flex min-h-[280px] flex-col justify-end p-8">
+                        <div className="inline-flex w-fit items-center rounded-full bg-white/20 px-3 py-1 text-xs font-medium backdrop-blur-md">
+                          {tenant.categories[0]?.name ?? "Tienda Destacada"}
                         </div>
-                        <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em]">
+                        <h2 className="mt-4 text-3xl font-bold tracking-tight text-white">
                           {tenant.name}
                         </h2>
-                        <div className="mt-3 flex items-center gap-4 text-sm text-white/80">
-                          <span>{tenant._count.products} productos</span>
-                          <span>{tenant._count.categories} categorias</span>
+                        <div className="mt-4 flex items-center gap-5 text-sm font-medium text-white/80">
+                          <span className="flex items-center gap-1.5"><Package className="size-4 opacity-70"/> {tenant._count.products} productos</span>
+                          <span className="flex items-center gap-1.5"><Tags className="size-4 opacity-70"/> {tenant._count.categories} categorías</span>
                         </div>
                       </div>
                     </div>
@@ -181,29 +174,34 @@ export default async function MarketplacePage() {
             </div>
           </section>
 
-        <section className="overflow-hidden rounded-[36px] bg-[#152d60] p-6 text-white shadow-[0_24px_60px_rgba(21,45,96,0.18)] lg:p-8">
-            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-white/60">
-              <Zap className="size-3" />
-              Estado de plataforma
+        <section className="overflow-hidden rounded-[36px] bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-white shadow-xl shadow-slate-900/10 lg:p-10">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+              <Zap className="size-4" />
+              Métricas del Ecosistema
             </div>
-            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
-              Multi tenant funcionando
+            <h2 className="mt-4 text-3xl font-bold tracking-tight">
+              Escalabilidad comprobada
             </h2>
-            <div className="mt-6 space-y-3 stagger-children">
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
               {[
-                { label: `${tenants.length} tiendas activas`, icon: "🏪" },
-                { label: `${products.length} productos destacados`, icon: "📦" },
-                { label: `${categories.length} categorias indexadas`, icon: "🏷️" },
-                { label: `Subdominios sobre ${env.rootDomain}`, icon: "🌐" },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="animate-fade-in-up flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/90 transition-colors hover:bg-white/10"
-                >
-                  <span>{item.icon}</span>
-                  {item.label}
-                </div>
-              ))}
+                { label: `${tenants.length} tiendas operando`, icon: Store },
+                { label: `${products.length} productos listados`, icon: Package },
+                { label: `${categories.length} categorías organizadas`, icon: Tags },
+                { label: `Infraestructura global`, icon: Globe },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={item.label}
+                    className="animate-fade-in-up flex items-center gap-4 rounded-2xl border border-white/5 bg-white/5 px-5 py-4 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10"
+                  >
+                    <div className="flex size-10 items-center justify-center rounded-full bg-white/10">
+                      <Icon className="size-5" />
+                    </div>
+                    {item.label}
+                  </div>
+                );
+              })}
             </div>
           </section>
         </div>
