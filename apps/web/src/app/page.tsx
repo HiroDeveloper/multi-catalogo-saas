@@ -1,16 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ChevronRight,
-  LayoutDashboard,
+  ArrowRight,
   Search,
   ShoppingCart,
-  Sparkles,
   Store,
-  Zap,
   Package,
-  Tags,
-  Globe,
+  Layers,
 } from "lucide-react";
 import {
   getMarketplaceHome,
@@ -34,7 +30,6 @@ function formatCurrency(value: unknown) {
 }
 
 function buildTenantHref(rootDomain: string, tenantSlug: string) {
-  // Para evitar problemas de DNS y dominios en Vercel, forzamos ruta relativa
   return `/t/${tenantSlug}`;
 }
 
@@ -44,14 +39,13 @@ export default async function MarketplacePage() {
 
   if (!data) {
     return (
-      <main className="min-h-screen bg-[#f4f7fd] px-4 py-8">
-        <div className="mx-auto max-w-5xl rounded-[32px] bg-white p-10 shadow-[0_24px_60px_rgba(23,104,229,0.12)]">
-          <h1 className="text-4xl font-semibold tracking-[-0.04em] text-slate-900">
-            Marketplace no disponible
+      <main className="min-h-screen bg-neutral-50 px-4 py-8 flex items-center justify-center">
+        <div className="max-w-2xl text-center">
+          <h1 className="text-3xl font-medium tracking-tight text-neutral-900">
+            Plataforma en mantenimiento
           </h1>
-          <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600">
-            La raiz del proyecto ya esta preparada para funcionar como portal
-            principal multiempresa, pero la API no respondio datos.
+          <p className="mt-4 text-neutral-500">
+            Estamos preparando la plataforma multi-catálogo. Vuelve pronto.
           </p>
         </div>
       </main>
@@ -64,325 +58,265 @@ export default async function MarketplacePage() {
   const categories = data.categories ?? [];
 
   return (
-    <main className="min-h-screen bg-[#f4f7fd] text-slate-900">
-      <header className="sticky top-0 z-30 border-b border-slate-200/60 glass">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 lg:px-8">
+    <main className="min-h-screen bg-[#FAFAFA] text-neutral-900 font-sans selection:bg-black selection:text-white">
+      {/* Navigation */}
+      <header className="sticky top-0 z-50 border-b border-neutral-200/50 bg-white/80 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
           <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-xl shadow-slate-900/10">
-              <Store className="size-5" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black text-white shadow-sm">
+              <Layers className="h-5 w-5" />
             </div>
             <div>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Plataforma
+              <div className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+                Plataforma B2B
               </div>
-              <div className="text-lg font-bold tracking-tight text-slate-900">
+              <div className="font-semibold tracking-tight text-neutral-900">
                 MultiCatálogo
               </div>
             </div>
           </div>
 
-          <div className="hidden max-w-md flex-1 lg:block">
-            <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-400 transition-all focus-within:border-[#1768e5]/40 focus-within:shadow-[0_0_0_3px_rgba(23,104,229,0.1)]">
-              <Search className="size-4" />
-              Buscar tiendas, productos o categorias
+          <div className="hidden flex-1 max-w-md mx-8 lg:block">
+            <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-400 transition-colors focus-within:border-neutral-400 focus-within:bg-white">
+              <Search className="h-4 w-4" />
+              <input 
+                type="text" 
+                placeholder="Buscar catálogos o marcas..." 
+                className="bg-transparent border-none outline-none w-full text-neutral-900 placeholder:text-neutral-400"
+              />
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 rounded-full bg-[#1768e5] px-4 py-3 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(23,104,229,0.3)] transition-all hover:shadow-[0_12px_32px_rgba(23,104,229,0.4)] active:scale-95"
+              className="group inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-neutral-800"
             >
-              <LayoutDashboard className="size-4" />
-              Admin demo
+              Portal Empresas
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
         </div>
       </header>
 
-      <section className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
-          <section className="overflow-hidden rounded-[36px] bg-white shadow-[0_24px_60px_rgba(23,104,229,0.12)]">
-            <div className="grid gap-6 p-6 lg:grid-cols-[1.1fr_0.9fr] lg:p-8">
-              <div className="space-y-6">
-                <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 shadow-sm">
-                  <Sparkles className="size-3 text-amber-500" />
-                  Plataforma B2B & B2C
-                </div>
-                <div>
-                  <h1 className="max-w-2xl text-5xl font-bold tracking-tight text-slate-900 lg:text-[64px] lg:leading-[1.1]">
-                    Vende más conectando tu catálogo al mundo.
-                  </h1>
-                  <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
-                    Crea tu tienda en línea en segundos, gestiona productos, inventario y promociones desde un panel centralizado con la mejor experiencia de usuario.
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-4">
-                  <Link
-                    href="/dashboard"
-                    className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800"
-                  >
-                    Acceder al Panel
-                    <ChevronRight className="size-4" />
-                  </Link>
-                  {heroTenants[0] ? (
-                    <a
-                      href={buildTenantHref(env.rootDomain, heroTenants[0].slug)}
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700"
-                    >
-                      Abrir tienda demo
-                      <ChevronRight className="size-4" />
-                    </a>
-                  ) : null}
-                </div>
+      {/* Hero Section */}
+      <section className="relative overflow-hidden pt-24 pb-32 lg:pt-32 lg:pb-40">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-neutral-100 via-neutral-50 to-neutral-50 -z-10" />
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white/50 backdrop-blur-sm px-4 py-1.5 text-xs font-semibold text-neutral-600 mb-8">
+                <span className="flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                Infraestructura E-commerce B2B
               </div>
-
-              <div className="grid gap-4">
-                {heroTenants.map((tenant: MarketplaceTenant) => (
+              <h1 className="text-5xl font-medium tracking-tight text-neutral-900 lg:text-7xl lg:leading-[1.1]">
+                Digitaliza el catálogo de tu empresa.
+              </h1>
+              <p className="mt-6 text-lg leading-relaxed text-neutral-500">
+                La plataforma diseñada para mayoristas y marcas. Administra múltiples catálogos, gestiona inventario en tiempo real y recibe pedidos directamente a tu canal de ventas preferido.
+              </p>
+              <div className="mt-10 flex flex-wrap items-center gap-4">
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-8 py-4 text-sm font-medium text-white transition-all hover:bg-neutral-800 hover:shadow-xl hover:shadow-black/10"
+                >
+                  Comenzar ahora
+                </Link>
+                {heroTenants[0] && (
                   <a
-                    key={tenant.id}
-                    href={buildTenantHref(env.rootDomain, tenant.slug)}
-                    className="group relative overflow-hidden rounded-[28px] bg-slate-900 text-white shadow-2xl transition hover:shadow-slate-900/20"
+                    href={buildTenantHref(env.rootDomain, heroTenants[0].slug)}
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-medium text-neutral-900 shadow-sm border border-neutral-200 transition-all hover:border-neutral-300 hover:bg-neutral-50"
                   >
-                    <div className="relative min-h-[280px]">
-                      {tenant.banners[0]?.imageUrl ? (
-                        <Image
-                          src={tenant.banners[0].imageUrl}
-                          alt={tenant.banners[0].title}
-                          fill
-                          className="object-cover opacity-80 transition duration-700 group-hover:scale-105 group-hover:opacity-100"
-                          sizes="50vw"
-                        />
-                      ) : null}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
-                      <div className="relative z-10 flex min-h-[280px] flex-col justify-end p-8">
-                        <div className="inline-flex w-fit items-center rounded-full bg-white/20 px-3 py-1 text-xs font-medium backdrop-blur-md">
-                          {tenant.categories[0]?.name ?? "Tienda Destacada"}
-                        </div>
-                        <h2 className="mt-4 text-3xl font-bold tracking-tight text-white">
-                          {tenant.name}
-                        </h2>
-                        <div className="mt-4 flex items-center gap-5 text-sm font-medium text-white/80">
-                          <span className="flex items-center gap-1.5"><Package className="size-4 opacity-70"/> {tenant._count.products} productos</span>
-                          <span className="flex items-center gap-1.5"><Tags className="size-4 opacity-70"/> {tenant._count.categories} categorías</span>
-                        </div>
-                      </div>
-                    </div>
+                    Ver catálogo demo
                   </a>
-                ))}
+                )}
+              </div>
+              
+              <div className="mt-12 flex items-center gap-8 border-t border-neutral-200 pt-8">
+                <div>
+                  <div className="text-3xl font-medium tracking-tight text-neutral-900">+{tenants.length}</div>
+                  <div className="text-sm font-medium text-neutral-500 mt-1">Marcas activas</div>
+                </div>
+                <div className="w-px h-12 bg-neutral-200"></div>
+                <div>
+                  <div className="text-3xl font-medium tracking-tight text-neutral-900">+{products.length}</div>
+                  <div className="text-sm font-medium text-neutral-500 mt-1">Productos listados</div>
+                </div>
               </div>
             </div>
-          </section>
 
-        <section className="overflow-hidden rounded-[36px] bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-white shadow-xl shadow-slate-900/10 lg:p-10">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
-              <Zap className="size-4" />
-              Métricas del Ecosistema
-            </div>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight">
-              Escalabilidad comprobada
-            </h2>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              {[
-                { label: `${tenants.length} tiendas operando`, icon: Store },
-                { label: `${products.length} productos listados`, icon: Package },
-                { label: `${categories.length} categorías organizadas`, icon: Tags },
-                { label: `Infraestructura global`, icon: Globe },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={item.label}
-                    className="animate-fade-in-up flex items-center gap-4 rounded-2xl border border-white/5 bg-white/5 px-5 py-4 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10"
-                  >
-                    <div className="flex size-10 items-center justify-center rounded-full bg-white/10">
-                      <Icon className="size-5" />
+            <div className="relative lg:h-[600px] w-full flex items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-to-tr from-neutral-200 to-white rounded-[40px] rotate-3 scale-105 -z-10 shadow-sm" />
+              <div className="absolute inset-0 bg-black rounded-[40px] -rotate-2 scale-105 -z-20 opacity-5" />
+              
+              {heroTenants[0] ? (
+                <a
+                  href={buildTenantHref(env.rootDomain, heroTenants[0].slug)}
+                  className="group relative block w-full h-[500px] overflow-hidden rounded-[32px] bg-neutral-900 shadow-2xl transition-transform duration-500 hover:-translate-y-2"
+                >
+                  {heroTenants[0].banners[0]?.imageUrl && (
+                    <Image
+                      src={heroTenants[0].banners[0].imageUrl}
+                      alt={heroTenants[0].name}
+                      fill
+                      className="object-cover opacity-60 transition-transform duration-1000 group-hover:scale-105"
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                      priority
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-10">
+                    <div className="inline-flex items-center rounded-full bg-white/20 backdrop-blur-md px-3 py-1 text-xs font-medium text-white mb-4 border border-white/10">
+                      Caso de éxito
                     </div>
-                    {item.label}
+                    <h2 className="text-3xl font-medium tracking-tight text-white">
+                      {heroTenants[0].name}
+                    </h2>
+                    <div className="mt-6 flex items-center gap-3">
+                      <span className="inline-flex items-center justify-center rounded-full bg-white text-black px-5 py-2.5 text-sm font-medium">
+                        Visitar catálogo <ArrowRight className="ml-2 h-4 w-4" />
+                      </span>
+                    </div>
                   </div>
-                );
-              })}
+                </a>
+              ) : (
+                <div className="w-full h-[500px] rounded-[32px] bg-neutral-100 flex items-center justify-center border border-neutral-200">
+                  <div className="text-neutral-400 font-medium">No hay marcas destacadas</div>
+                </div>
+              )}
             </div>
-          </section>
+          </div>
         </div>
+      </section>
 
-        <section className="rounded-[36px] bg-white p-6 shadow-[0_24px_60px_rgba(23,104,229,0.10)] lg:p-8">
-          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+      {/* Features Grid */}
+      <section className="bg-white py-24 sm:py-32 border-y border-neutral-200">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-neutral-500">Arquitectura robusta</h2>
+            <p className="mt-2 text-3xl font-medium tracking-tight text-neutral-900 sm:text-4xl">
+              Todo lo que necesitas para escalar tu distribución.
+            </p>
+          </div>
+          <div className="mx-auto mt-16 max-w-7xl sm:mt-20 lg:mt-24 lg:max-w-none">
+            <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+              {[
+                {
+                  name: 'Gestión Multi-Catálogo',
+                  description: 'Administra múltiples marcas o sucursales desde un único panel centralizado con dominios personalizados para cada una.',
+                  icon: Layers,
+                },
+                {
+                  name: 'Variantes Complejas',
+                  description: 'Controla tallas, colores, pesos y SKU independientes. Asigna inventario y fotografías específicas por variante.',
+                  icon: Package,
+                },
+                {
+                  name: 'Recepción de Pedidos',
+                  description: 'Flujo de checkout B2B optimizado que envía el resumen de compra estructurado directamente a WhatsApp o correo.',
+                  icon: ShoppingCart,
+                },
+              ].map((feature) => (
+                <div key={feature.name} className="flex flex-col">
+                  <dt className="flex items-center gap-x-3 text-lg font-medium text-neutral-900">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-neutral-100 border border-neutral-200">
+                      <feature.icon className="h-6 w-6 text-neutral-700" aria-hidden="true" />
+                    </div>
+                    {feature.name}
+                  </dt>
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-neutral-600">
+                    <p className="flex-auto">{feature.description}</p>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      {/* Tenants Showcase */}
+      <section className="bg-[#FAFAFA] py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
             <div>
-              <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                Tiendas
-              </div>
-              <h2 className="mt-2 text-4xl font-semibold tracking-[-0.05em] text-slate-900">
-                Catalogos por empresa
+              <h2 className="text-3xl font-medium tracking-tight text-neutral-900 sm:text-4xl">
+                Marcas utilizando MultiCatálogo
               </h2>
+              <p className="mt-4 text-lg text-neutral-500">
+                Explora cómo otras empresas han digitalizado su inventario.
+              </p>
             </div>
-            <div className="flex flex-wrap gap-3">
-              {categories
-                .slice(0, 7)
-                .map((category: MarketplaceCategory, index: number) => (
-                  <span
-                    key={`${category.id}-${category.tenant.slug}`}
-                    className={`rounded-full px-4 py-2 text-sm font-medium ${
-                      index === 0
-                        ? "bg-[#1768e5] text-white"
-                        : "bg-slate-100 text-slate-600"
-                    }`}
-                  >
-                    {category.name}
-                  </span>
-                ))}
+            <div className="flex flex-wrap gap-2">
+              {categories.slice(0, 5).map((category: MarketplaceCategory) => (
+                <span
+                  key={`${category.id}-${category.tenant.slug}`}
+                  className="rounded-full bg-white border border-neutral-200 px-4 py-1.5 text-sm font-medium text-neutral-600 shadow-sm"
+                >
+                  {category.name}
+                </span>
+              ))}
             </div>
           </div>
 
-          <div className="mt-8 grid gap-5 stagger-children lg:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {tenants.map((tenant: MarketplaceTenant) => (
-              <article
+              <a
                 key={tenant.id}
-                className="card-lift animate-fade-in-up overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.06)]"
+                href={buildTenantHref(env.rootDomain, tenant.slug)}
+                className="group flex flex-col overflow-hidden rounded-[24px] bg-white border border-neutral-200 shadow-sm transition-all hover:shadow-lg hover:border-neutral-300"
               >
-                <div className="relative aspect-[5/3] bg-slate-100">
+                <div className="relative aspect-[16/9] w-full bg-neutral-100 overflow-hidden">
                   {tenant.banners[0]?.imageUrl ? (
                     <Image
                       src={tenant.banners[0].imageUrl}
                       alt={tenant.banners[0].title}
                       fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 25vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, 33vw"
                     />
-                  ) : null}
-                  <div className="absolute left-4 top-4 rounded-full bg-[#1768e5] px-3 py-1 text-xs font-semibold text-white">
-                    {tenant.categories[0]?.name ?? "Tienda"}
-                  </div>
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <Store className="h-10 w-10 text-neutral-300" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                 </div>
-                <div className="space-y-4 p-4">
+                <div className="flex flex-1 flex-col justify-between p-6">
                   <div>
-                    <h3 className="text-2xl font-semibold tracking-[-0.04em] text-slate-900">
+                    <h3 className="text-xl font-medium text-neutral-900 group-hover:text-black">
                       {tenant.name}
                     </h3>
-                    <p className="mt-2 text-sm leading-7 text-slate-600">
-                      {tenant.banners[0]?.subtitle ??
-                        "Catalogo visual con promociones y pedido a WhatsApp."}
+                    <p className="mt-2 text-sm text-neutral-500 line-clamp-2">
+                      Catálogo digital operando con {tenant._count.products} productos activos.
                     </p>
                   </div>
-                  <div className="flex items-center justify-between text-sm text-slate-500">
-                    <span>{tenant._count.products} productos</span>
-                    <span>{tenant._count.promotions} promos</span>
+                  <div className="mt-6 flex items-center text-sm font-medium text-neutral-900">
+                    Visitar catálogo <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </div>
-                  <a
-                    href={buildTenantHref(env.rootDomain, tenant.slug)}
-                    className="inline-flex items-center gap-2 rounded-full bg-[#1768e5] px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_20px_rgba(23,104,229,0.25)] transition-all hover:shadow-[0_10px_28px_rgba(23,104,229,0.35)] active:scale-95"
-                  >
-                    Entrar
-                    <ChevronRight className="size-4" />
-                  </a>
                 </div>
-              </article>
+              </a>
             ))}
           </div>
-        </section>
-
-        <section className="rounded-[36px] bg-white p-6 shadow-[0_24px_60px_rgba(23,104,229,0.10)] lg:p-8">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                Productos destacados
-              </div>
-              <h2 className="mt-2 text-4xl font-semibold tracking-[-0.05em] text-slate-900">
-                Venta cruzada del marketplace
-              </h2>
-            </div>
-          </div>
-
-          <div className="mt-8 grid gap-5 stagger-children sm:grid-cols-2 xl:grid-cols-6">
-            {products.map((product: MarketplaceProduct) => (
-              <article
-                key={product.id}
-                className="card-lift animate-fade-in-up overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.05)]"
-              >
-                <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                  {product.images[0]?.url ? (
-                    <Image
-                      src={product.images[0].url}
-                      alt={product.images[0].alt ?? product.name}
-                      fill
-                      className="object-cover transition-transform duration-500 hover:scale-105"
-                      sizes="(max-width: 768px) 100vw, 16vw"
-                    />
-                  ) : null}
-                  <div className="absolute left-3 top-3 rounded-full bg-[#1768e5] px-3 py-1 text-[11px] font-semibold text-white">
-                    Mas vendido
-                  </div>
-                </div>
-                <div className="space-y-3 p-4">
-                  <div>
-                    <h3 className="line-clamp-2 text-lg font-semibold tracking-[-0.03em] text-slate-900">
-                      {product.name}
-                    </h3>
-                    <p className="mt-2 text-sm text-slate-500">
-                      {product.tenant.name}
-                    </p>
-                  </div>
-                  <div className="text-2xl font-semibold tracking-[-0.04em] text-[#1768e5]">
-                    {formatCurrency(product.price)}
-                  </div>
-                  <a
-                    href={buildTenantHref(env.rootDomain, product.tenant.slug)}
-                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition-all hover:border-[#1768e5]/30 hover:text-[#1768e5] active:scale-95"
-                  >
-                    <ShoppingCart className="size-4" />
-                    Ver tienda
-                  </a>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="mt-4 rounded-[36px] bg-[#0f172a] p-8 text-white lg:p-12">
-          <div className="grid gap-10 md:grid-cols-3">
-            <div>
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-[#1768e5]">
-                  <Store className="size-5" />
-                </div>
-                <span className="text-lg font-semibold">Multi Catalogo</span>
-              </div>
-              <p className="mt-4 text-sm leading-7 text-slate-400">
-                Plataforma SaaS multi-tenant para catalogos digitales con storefront propio, admin central y checkout por WhatsApp.
-              </p>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Plataforma
-              </h4>
-              <ul className="mt-4 space-y-3 text-sm text-slate-400">
-                <li className="transition-colors hover:text-white"><Link href="/dashboard">Panel admin</Link></li>
-                <li className="transition-colors hover:text-white"><Link href="/dashboard/tenants">Gestion de tiendas</Link></li>
-                <li className="transition-colors hover:text-white"><a href="#">Documentacion</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Funcionalidades
-              </h4>
-              <ul className="mt-4 space-y-3 text-sm text-slate-400">
-                <li>✅ Subdominios automaticos</li>
-                <li>✅ Promociones con precios dinamicos</li>
-                <li>✅ Checkout a WhatsApp</li>
-                <li>✅ Almacenamiento en Cloudflare R2</li>
-              </ul>
-            </div>
-          </div>
-          <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 md:flex-row">
-            <p className="text-xs text-slate-500">© 2026 Multi Catalogo SaaS. Todos los derechos reservados.</p>
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <span className="inline-flex size-2 rounded-full bg-emerald-400 animate-pulse" />
-              Sistema operativo · v1.0.0
-            </div>
-          </div>
-        </footer>
+        </div>
       </section>
+
+      {/* Footer */}
+      <footer className="border-t border-neutral-200 bg-white">
+        <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-2">
+            <Layers className="h-5 w-5 text-neutral-900" />
+            <span className="font-semibold tracking-tight text-neutral-900">MultiCatálogo SaaS</span>
+          </div>
+          <p className="text-sm text-neutral-500 text-center md:text-left">
+            &copy; {new Date().getFullYear()} Plataforma MultiCatálogo. Todos los derechos reservados.
+          </p>
+          <div className="flex gap-6">
+            <Link href="/dashboard" className="text-sm font-medium text-neutral-500 hover:text-neutral-900">
+              Acceso Empresas
+            </Link>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
