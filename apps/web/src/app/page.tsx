@@ -90,7 +90,7 @@ export default async function MarketplacePage() {
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard"
-              className="group inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-neutral-800"
+              className="group inline-flex items-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-medium !text-white transition-all hover:bg-neutral-800"
             >
               Portal Empresas
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -118,7 +118,7 @@ export default async function MarketplacePage() {
               <div className="mt-10 flex flex-wrap items-center gap-4">
                 <Link
                   href="/dashboard"
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-8 py-4 text-sm font-medium text-white transition-all hover:bg-neutral-800 hover:shadow-xl hover:shadow-black/10"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-8 py-4 text-sm font-medium !text-white transition-all hover:bg-neutral-800 hover:shadow-xl hover:shadow-black/10"
                 >
                   Comenzar ahora
                 </Link>
