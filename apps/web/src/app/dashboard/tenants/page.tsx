@@ -83,7 +83,9 @@ export default async function DashboardTenantsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-slate-600">{tenant.subdomain}.lvh.me</td>
+                    <td className="px-4 py-4 text-slate-600">
+                      {tenant.subdomain}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me'}
+                    </td>
                     <td className="px-4 py-4 text-slate-600">{tenant._count.products}</td>
                     <td className="px-4 py-4 text-slate-600">{tenant._count.categories}</td>
                     <td className="px-4 py-4 text-slate-600">{tenant._count.promotions}</td>

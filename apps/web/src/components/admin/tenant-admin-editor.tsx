@@ -183,7 +183,7 @@ export function TenantAdminEditor({ initialTenant }: TenantAdminEditorProps) {
                 {tenant.name}
               </h1>
               <p className="mt-2 text-sm text-slate-500">
-                {tenant.subdomain}.lvh.me · {tenant._count.products} productos ·{" "}
+                {tenant.subdomain}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me'} · {tenant._count.products} productos ·{" "}
                 {tenant._count.categories} categorias
               </p>
             </div>
@@ -196,7 +196,11 @@ export function TenantAdminEditor({ initialTenant }: TenantAdminEditorProps) {
                 Volver
               </Link>
               <a
-                href={`http://${tenant.subdomain}.lvh.me:3000/`}
+                href={
+                  (process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me') === 'vercel.app' || (process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me').includes('.vercel.app')
+                    ? `/t/${tenant.subdomain}`
+                    : `http${(process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me') !== 'lvh.me' ? 's' : ''}://${tenant.subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me'}${(process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me') === 'lvh.me' ? ':3000' : ''}/`
+                }
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-full bg-[#1768e5] px-5 py-3 text-sm font-semibold text-white"

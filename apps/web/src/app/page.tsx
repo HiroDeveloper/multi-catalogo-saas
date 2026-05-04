@@ -31,6 +31,11 @@ function formatCurrency(value: unknown) {
 }
 
 function buildTenantHref(rootDomain: string, tenantSlug: string) {
+  // En Vercel no tenemos wildcard subdomains por defecto
+  if (rootDomain === "vercel.app" || rootDomain.includes(".vercel.app")) {
+    return `/t/${tenantSlug}`;
+  }
+
   const isLocal = rootDomain === "lvh.me" || rootDomain.endsWith(".local");
   const protocol = isLocal ? "http" : "https";
   const port = isLocal ? ":3000" : "";
