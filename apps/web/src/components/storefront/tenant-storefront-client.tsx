@@ -246,6 +246,7 @@ export function TenantStorefrontClient({
       ];
     });
 
+    setSelectedProduct(null);
     setAddedConfirm(name);
   }
 
@@ -1116,87 +1117,99 @@ export function TenantStorefrontClient({
 
               {/* CTA Buttons */}
               <div className="mt-6 flex flex-col gap-3">
-                {addedConfirm ? (
-                  <>
-                    <div
-                      className="flex items-center gap-3 rounded-2xl p-4"
-                      style={{ backgroundColor: `${primary}12` }}
-                    >
-                      <div
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-                        style={{ backgroundColor: primary }}
-                      >
-                        <ShoppingCart className="size-4 text-white" />
-                      </div>
-                      <p className="text-sm font-bold text-stone-800">
-                        <span className="line-clamp-1">{addedConfirm}</span>
-                        <span className="block text-xs font-normal text-stone-500">
-                          agregado al carrito
-                        </span>
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedProduct(null);
-                        setAddedConfirm(null);
-                        setIsCartOpen(true);
-                      }}
-                      className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-extrabold uppercase tracking-widest text-white transition-all"
-                      style={getAccentButtonStyle(primary, secondary)}
-                    >
-                      <ShoppingBag className="size-4" />
-                      Ir al carrito
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedProduct(null);
-                        setAddedConfirm(null);
-                      }}
-                      className="flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-200 py-4 text-sm font-bold uppercase tracking-widest text-stone-700 transition-all hover:bg-stone-50"
-                    >
-                      <ArrowRight className="size-4" />
-                      Seguir mirando
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => {
-                        const hasOptions = selectedProduct.options && selectedProduct.options.length > 0;
-                        if (hasOptions && !matchingVariant) return;
-                        if (hasOptions && matchingVariant && matchingVariant.stock <= 0) return;
-                        addToCart(selectedProduct, matchingVariant ?? undefined, modalQuantity);
-                      }}
-                      disabled={
-                        (selectedProduct.options && selectedProduct.options.length > 0 && (!matchingVariant || matchingVariant.stock <= 0)) ||
-                        (!selectedProduct.options?.length && selectedProduct.stock <= 0)
-                      }
-                      className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-extrabold uppercase tracking-widest text-white disabled:cursor-not-allowed disabled:opacity-50 transition-all"
-                      style={getAccentButtonStyle(primary, secondary)}
-                    >
-                      {selectedProduct.options && selectedProduct.options.length > 0 && !matchingVariant
-                        ? "Selecciona las opciones"
-                        : matchingVariant && matchingVariant.stock <= 0
-                          ? "Agotado"
-                          : selectedProduct.stock <= 0 && !selectedProduct.options?.length
-                            ? "Agotado"
-                            : "Agregar al carrito"}
-                      <ShoppingCart className="size-5" />
-                    </button>
-                    <a
-                      href={buildWhatsAppHref(phone, storefront.tenant.name, selectedProduct.name)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-200 py-4 text-sm font-bold uppercase tracking-widest text-stone-700 transition-all hover:bg-stone-50"
-                    >
-                      <MessageCircleMore className="size-4" />
-                      Consultar por WhatsApp
-                    </a>
-                  </>
-                )}
+                <button
+                  onClick={() => {
+                    const hasOptions = selectedProduct.options && selectedProduct.options.length > 0;
+                    if (hasOptions && !matchingVariant) return;
+                    if (hasOptions && matchingVariant && matchingVariant.stock <= 0) return;
+                    addToCart(selectedProduct, matchingVariant ?? undefined, modalQuantity);
+                  }}
+                  disabled={
+                    (selectedProduct.options && selectedProduct.options.length > 0 && (!matchingVariant || matchingVariant.stock <= 0)) ||
+                    (!selectedProduct.options?.length && selectedProduct.stock <= 0)
+                  }
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-extrabold uppercase tracking-widest text-white disabled:cursor-not-allowed disabled:opacity-50 transition-all"
+                  style={getAccentButtonStyle(primary, secondary)}
+                >
+                  {selectedProduct.options && selectedProduct.options.length > 0 && !matchingVariant
+                    ? "Selecciona las opciones"
+                    : matchingVariant && matchingVariant.stock <= 0
+                      ? "Agotado"
+                      : selectedProduct.stock <= 0 && !selectedProduct.options?.length
+                        ? "Agotado"
+                        : "Agregar al carrito"}
+                  <ShoppingCart className="size-5" />
+                </button>
+                <a
+                  href={buildWhatsAppHref(phone, storefront.tenant.name, selectedProduct.name)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-200 py-4 text-sm font-bold uppercase tracking-widest text-stone-700 transition-all hover:bg-stone-50"
+                >
+                  <MessageCircleMore className="size-4" />
+                  Consultar por WhatsApp
+                </a>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add-to-cart confirmation modal */}
+      {addedConfirm && (
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-sm"
+          onClick={() => setAddedConfirm(null)}
+        >
+          <div
+            className="w-full max-w-sm overflow-hidden rounded-[28px] bg-white shadow-2xl"
+            style={{ boxShadow: `0 32px 80px -12px ${hexToRgba(primary, 0.28)}` }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div
+              className="flex flex-col items-center px-8 pb-6 pt-8 text-center"
+              style={{
+                background: `linear-gradient(160deg, ${hexToRgba(primary, 0.09)}, ${hexToRgba(secondary, 0.04)})`,
+              }}
+            >
+              <div
+                className="mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+                style={{ backgroundColor: primary }}
+              >
+                <ShoppingCart className="size-7 text-white" />
+              </div>
+              <h3 className="font-display text-xl font-black tracking-[-0.04em] text-stone-900">
+                Agregado al carrito
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-stone-500">
+                <span className="font-semibold text-stone-700">{addedConfirm}</span>
+                {" "}esta listo en tu carrito.
+              </p>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex flex-col gap-3 p-5">
+              <button
+                type="button"
+                onClick={() => {
+                  setAddedConfirm(null);
+                  setIsCartOpen(true);
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-extrabold uppercase tracking-widest text-white transition-transform active:scale-95"
+                style={getAccentButtonStyle(primary, secondary)}
+              >
+                <ShoppingBag className="size-4" />
+                Ir al carrito
+              </button>
+              <button
+                type="button"
+                onClick={() => setAddedConfirm(null)}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-200 py-4 text-sm font-bold uppercase tracking-widest text-stone-700 transition-all hover:bg-stone-50"
+              >
+                <Search className="size-4" />
+                Seguir mirando
+              </button>
             </div>
           </div>
         </div>
