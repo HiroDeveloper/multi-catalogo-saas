@@ -180,6 +180,7 @@ export function TenantStorefrontClient({
   const [selectedProduct, setSelectedProduct] = useState<StorefrontProduct | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [modalQuantity, setModalQuantity] = useState(1);
 
   // Find matching variant based on selected options
   const matchingVariant = selectedProduct?.variants?.find(v =>
@@ -200,31 +201,31 @@ export function TenantStorefrontClient({
     setSelectedProduct(product);
     setSelectedOptions({});
     setSelectedImageIndex(0);
+    setModalQuantity(1);
   }
 
-  function addToCart(product: StorefrontProduct, variant?: any) {
+  function addToCart(product: StorefrontProduct, variant?: any, qty = 1) {
     setCheckoutDone("");
     let effectivePrice = product.promotion
       ? parseNumber(product.promotion.finalPrice)
       : parseNumber(product.price);
-      
+
     if (variant && variant.price !== null) {
-       effectivePrice = parseNumber(variant.price);
+      effectivePrice = parseNumber(variant.price);
     }
 
     const name = variant ? `${product.name} - ${variant.name}` : product.name;
     const imageUrl = variant?.image?.url || variant?.imageUrl || product.images[0]?.url || null;
-    const idKey = variant ? `${product.id}-${variant.id}` : product.id;
 
     setCart((currentCart) => {
-      const existing = currentCart.find((item) => 
-        (variant ? item.variantId === variant.id : item.productId === product.id && !item.variantId)
+      const existing = currentCart.find((item) =>
+        variant ? item.variantId === variant.id : item.productId === product.id && !item.variantId
       );
 
       if (existing) {
         return currentCart.map((item) =>
           (variant ? item.variantId === variant.id : item.productId === product.id && !item.variantId)
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + qty }
             : item,
         );
       }
@@ -235,14 +236,14 @@ export function TenantStorefrontClient({
           productId: product.id,
           name,
           price: effectivePrice,
-          quantity: 1,
+          quantity: qty,
           imageUrl,
           variantId: variant?.id,
           variantName: variant?.name,
         },
       ];
     });
-    
+
     setSelectedProduct(null);
     setIsCartOpen(true);
   }
@@ -1086,6 +1087,32 @@ export function TenantStorefrontClient({
                 </div>
               )}
 
+              {/* Quantity selector */}
+              <div className="mt-6">
+                <label className="text-xs font-bold uppercase tracking-[0.18em] text-stone-700">
+                  Cantidad
+                </label>
+                <div className="mt-2 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setModalQuantity((q) => Math.max(1, q - 1))}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-stone-200 text-stone-600 transition-colors hover:border-stone-400"
+                  >
+                    <Minus className="size-4" />
+                  </button>
+                  <span className="min-w-[2.5rem] text-center text-lg font-extrabold text-stone-900">
+                    {modalQuantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setModalQuantity((q) => q + 1)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-stone-200 text-stone-600 transition-colors hover:border-stone-400"
+                  >
+                    <Plus className="size-4" />
+                  </button>
+                </div>
+              </div>
+
               {/* CTA Buttons */}
               <div className="mt-6 flex flex-col gap-3">
                 <button
@@ -1093,7 +1120,7 @@ export function TenantStorefrontClient({
                     const hasOptions = selectedProduct.options && selectedProduct.options.length > 0;
                     if (hasOptions && !matchingVariant) return;
                     if (hasOptions && matchingVariant && matchingVariant.stock <= 0) return;
-                    addToCart(selectedProduct, matchingVariant ?? undefined);
+                    addToCart(selectedProduct, matchingVariant ?? undefined, modalQuantity);
                   }}
                   disabled={
                     (selectedProduct.options && selectedProduct.options.length > 0 && (!matchingVariant || matchingVariant.stock <= 0)) ||
