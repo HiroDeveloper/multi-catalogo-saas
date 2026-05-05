@@ -179,9 +179,10 @@ export function TenantStorefrontClient({
 
   const [selectedProduct, setSelectedProduct] = useState<StorefrontProduct | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
-  
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
   // Find matching variant based on selected options
-  const matchingVariant = selectedProduct?.variants?.find(v => 
+  const matchingVariant = selectedProduct?.variants?.find(v =>
     v.options.every(o => selectedOptions[o.option.name] === o.value.value)
   );
 
@@ -195,13 +196,10 @@ export function TenantStorefrontClient({
     0,
   );
 
-  function handleAddToCartClick(product: StorefrontProduct) {
-    if (product.options && product.options.length > 0) {
-      setSelectedProduct(product);
-      setSelectedOptions({});
-    } else {
-      addToCart(product);
-    }
+  function openProductModal(product: StorefrontProduct) {
+    setSelectedProduct(product);
+    setSelectedOptions({});
+    setSelectedImageIndex(0);
   }
 
   function addToCart(product: StorefrontProduct, variant?: any) {
@@ -456,7 +454,7 @@ export function TenantStorefrontClient({
         <section id="coleccion" className="mx-auto max-w-screen-2xl px-6 pb-24 lg:px-8">
           <div className="grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {featuredProducts.map((product: StorefrontProduct, index: number) => (
-              <article key={product.id} className="group">
+              <article key={product.id} className="group cursor-pointer" onClick={() => openProductModal(product)}>
                 <div className="relative mb-6 aspect-[4/5] overflow-hidden rounded-[20px] bg-[#f0edec] transition-all duration-500 group-hover:shadow-[0_40px_60px_-15px_rgba(164,55,0,0.12)]">
                   {product.promotion ? (
                     <div className="absolute left-4 top-4 z-10">
@@ -519,17 +517,18 @@ export function TenantStorefrontClient({
                   <div className="flex flex-col gap-2">
                     <button
                       type="button"
-                      onClick={() => handleAddToCartClick(product)}
+                      onClick={() => openProductModal(product)}
                       className="inline-flex items-center justify-center gap-2 rounded-md py-3 text-center text-xs font-bold uppercase tracking-[0.16em] text-white transition-transform active:scale-95"
                       style={getAccentButtonStyle(primary, secondary)}
                     >
-                      <ShoppingCart className="size-4" />
-                      Agregar al carrito
+                      <Search className="size-4" />
+                      Ver producto
                     </button>
                     <a
                       href={buildWhatsAppHref(phone, storefront.tenant.name, product.name)}
                       target="_blank"
                       rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
                       className="py-2 text-center text-xs font-bold uppercase tracking-[0.16em] transition-all hover:underline"
                       style={{ color: secondary }}
                     >
@@ -934,93 +933,194 @@ export function TenantStorefrontClient({
         </div>
       </footer>
 
-      {/* Product Variant Modal */}
+      {/* Product Detail Modal */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-stone-900/60 p-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-lg overflow-hidden rounded-[32px] bg-white shadow-2xl">
+        <div
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-stone-900/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setSelectedProduct(null); }}
+        >
+          <div className="relative w-full max-w-2xl overflow-hidden rounded-t-[32px] bg-white shadow-2xl sm:rounded-[32px] max-h-[92vh] flex flex-col">
+            {/* Close button */}
             <button
               onClick={() => setSelectedProduct(null)}
-              className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-stone-100 text-stone-500 hover:bg-stone-200"
+              className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-stone-600 shadow-md hover:bg-stone-100 transition-colors"
             >
               <X className="size-5" />
             </button>
-            <div className="p-8">
-              <div className="mb-6 flex gap-4">
-                <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-stone-100">
-                  <Image
-                    src={matchingVariant?.image?.url || (matchingVariant as any)?.imageUrl || selectedProduct.images[0]?.url || ""}
-                    alt={matchingVariant?.name || selectedProduct.name}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div>
-                  <h3 className="font-display text-2xl font-black text-stone-900 leading-tight">
-                    {selectedProduct.name}
-                  </h3>
-                  <p className="mt-1 text-xl font-bold" style={{ color: primary }}>
-                    {formatCurrency(
-                      matchingVariant && matchingVariant.price !== null
-                        ? parseNumber(matchingVariant.price)
-                        : selectedProduct.promotion
-                          ? parseNumber(selectedProduct.promotion.finalPrice)
-                          : parseNumber(selectedProduct.price)
-                    )}
-                  </p>
-                  {matchingVariant && (
-                    <p className="text-sm text-stone-500 mt-1">
-                      {matchingVariant.stock > 0 ? `${matchingVariant.stock} disponibles` : "Sin stock"} 
-                      {matchingVariant.weight && ` • Peso: ${matchingVariant.weight}`}
-                    </p>
-                  )}
-                </div>
-              </div>
 
-              <div className="space-y-6">
-                {selectedProduct.options?.sort((a,b) => a.position - b.position).map((opt) => (
-                  <div key={opt.id}>
-                    <label className="text-sm font-bold uppercase tracking-widest text-stone-900">
-                      {opt.name}
-                    </label>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {opt.values.sort((a,b) => a.position - b.position).map((val) => {
-                        const isSelected = selectedOptions[opt.name] === val.value;
-                        return (
-                          <button
-                            key={val.id}
-                            onClick={() => setSelectedOptions(prev => ({ ...prev, [opt.name]: val.value }))}
-                            className="rounded-full border-2 px-5 py-2.5 text-sm font-bold transition-all"
-                            style={{
-                              borderColor: isSelected ? primary : "#e5e7eb",
-                              color: isSelected ? primary : "#4b5563",
-                              backgroundColor: isSelected ? `${primary}10` : "transparent"
-                            }}
-                          >
-                            {val.value}
-                          </button>
-                        );
-                      })}
+            {/* Image Gallery */}
+            <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-stone-100">
+              {selectedProduct.images.length > 0 ? (
+                <>
+                  <Image
+                    src={selectedProduct.images[selectedImageIndex]?.url ?? ""}
+                    alt={selectedProduct.images[selectedImageIndex]?.alt ?? selectedProduct.name}
+                    fill
+                    className="object-cover transition-opacity duration-300"
+                    sizes="(max-width: 640px) 100vw, 672px"
+                  />
+                  {selectedProduct.promotion && (
+                    <div className="absolute left-4 top-4 z-10">
+                      <span
+                        className="rounded-full px-3 py-1 text-xs font-black uppercase tracking-tight text-white"
+                        style={{ backgroundColor: secondary }}
+                      >
+                        -{selectedProduct.promotion.discountPercent}%
+                      </span>
                     </div>
-                  </div>
+                  )}
+                  {selectedProduct.images.length > 1 && (
+                    <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+                      {selectedProduct.images.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setSelectedImageIndex(i)}
+                          className="h-2 rounded-full transition-all duration-200"
+                          style={{
+                            width: i === selectedImageIndex ? "24px" : "8px",
+                            backgroundColor: i === selectedImageIndex ? primary : "rgba(255,255,255,0.6)",
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex h-full items-center justify-center text-stone-300">
+                  <ShoppingBag className="size-16" />
+                </div>
+              )}
+            </div>
+
+            {/* Thumbnail strip */}
+            {selectedProduct.images.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto px-6 pb-0 pt-3 shrink-0">
+                {selectedProduct.images.map((img, i) => (
+                  <button
+                    key={img.id}
+                    onClick={() => setSelectedImageIndex(i)}
+                    className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-all"
+                    style={{ borderColor: i === selectedImageIndex ? primary : "transparent" }}
+                  >
+                    <Image src={img.url} alt={img.alt ?? ""} fill className="object-cover" sizes="56px" />
+                  </button>
                 ))}
               </div>
+            )}
 
-              <button
-                onClick={() => {
-                  if (!matchingVariant) return;
-                  addToCart(selectedProduct, matchingVariant);
-                }}
-                disabled={!matchingVariant || matchingVariant.stock <= 0}
-                className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-extrabold uppercase tracking-widest text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                style={getAccentButtonStyle(primary, secondary)}
-              >
-                {!matchingVariant 
-                  ? "Selecciona opciones" 
-                  : matchingVariant.stock <= 0 
-                    ? "Agotado" 
-                    : "Agregar al carrito"}
-                <ShoppingCart className="size-5" />
-              </button>
+            {/* Content */}
+            <div className="overflow-y-auto flex-1 p-6">
+              {/* Header */}
+              <div className="mb-1 text-xs font-bold uppercase tracking-[0.18em]" style={{ color: primary }}>
+                {selectedProduct.category?.name ?? "Producto"}
+              </div>
+              <h3 className="font-display text-2xl font-black leading-tight tracking-[-0.04em] text-stone-900">
+                {selectedProduct.name}
+              </h3>
+
+              {/* Price */}
+              <div className="mt-3 flex items-baseline gap-3">
+                <span className="text-2xl font-extrabold" style={{ color: primary }}>
+                  {formatCurrency(
+                    matchingVariant && matchingVariant.price !== null
+                      ? parseNumber(matchingVariant.price)
+                      : selectedProduct.promotion
+                        ? parseNumber(selectedProduct.promotion.finalPrice)
+                        : parseNumber(selectedProduct.price)
+                  )}
+                </span>
+                {selectedProduct.promotion && (
+                  <span className="text-base text-stone-400 line-through">
+                    {formatCurrency(parseNumber(selectedProduct.price))}
+                  </span>
+                )}
+              </div>
+
+              {/* Stock info */}
+              {matchingVariant ? (
+                <p className="mt-1 text-sm text-stone-500">
+                  {matchingVariant.stock > 0 ? `${matchingVariant.stock} disponibles` : "Sin stock"}
+                  {matchingVariant.weight ? ` • Peso: ${matchingVariant.weight}` : ""}
+                  {matchingVariant.sku ? ` • SKU: ${matchingVariant.sku}` : ""}
+                </p>
+              ) : !selectedProduct.options?.length && selectedProduct.stock > 0 ? (
+                <p className="mt-1 text-sm text-stone-500">{selectedProduct.stock} disponibles</p>
+              ) : null}
+
+              {/* Description */}
+              {(selectedProduct.description || selectedProduct.shortDescription) && (
+                <div className="mt-4 rounded-2xl bg-stone-50 p-4 text-sm leading-7 text-stone-600">
+                  {selectedProduct.description ?? selectedProduct.shortDescription}
+                </div>
+              )}
+
+              {/* Options / Variants */}
+              {selectedProduct.options && selectedProduct.options.length > 0 && (
+                <div className="mt-5 space-y-5">
+                  {selectedProduct.options.sort((a, b) => a.position - b.position).map((opt) => (
+                    <div key={opt.id}>
+                      <label className="text-xs font-bold uppercase tracking-[0.18em] text-stone-700">
+                        {opt.name}
+                      </label>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {opt.values.sort((a, b) => a.position - b.position).map((val) => {
+                          const isSelected = selectedOptions[opt.name] === val.value;
+                          return (
+                            <button
+                              key={val.id}
+                              onClick={() => setSelectedOptions(prev => ({ ...prev, [opt.name]: val.value }))}
+                              className="rounded-full border-2 px-4 py-2 text-sm font-bold transition-all"
+                              style={{
+                                borderColor: isSelected ? primary : "#e5e7eb",
+                                color: isSelected ? primary : "#4b5563",
+                                backgroundColor: isSelected ? `${primary}18` : "transparent",
+                              }}
+                            >
+                              {val.value}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* CTA Buttons */}
+              <div className="mt-6 flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    const hasOptions = selectedProduct.options && selectedProduct.options.length > 0;
+                    if (hasOptions && !matchingVariant) return;
+                    if (hasOptions && matchingVariant && matchingVariant.stock <= 0) return;
+                    addToCart(selectedProduct, matchingVariant ?? undefined);
+                  }}
+                  disabled={
+                    (selectedProduct.options && selectedProduct.options.length > 0 && (!matchingVariant || matchingVariant.stock <= 0)) ||
+                    (!selectedProduct.options?.length && selectedProduct.stock <= 0)
+                  }
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-extrabold uppercase tracking-widest text-white disabled:cursor-not-allowed disabled:opacity-50 transition-all"
+                  style={getAccentButtonStyle(primary, secondary)}
+                >
+                  {selectedProduct.options && selectedProduct.options.length > 0 && !matchingVariant
+                    ? "Selecciona las opciones"
+                    : matchingVariant && matchingVariant.stock <= 0
+                      ? "Agotado"
+                      : selectedProduct.stock <= 0 && !selectedProduct.options?.length
+                        ? "Agotado"
+                        : "Agregar al carrito"}
+                  <ShoppingCart className="size-5" />
+                </button>
+                <a
+                  href={buildWhatsAppHref(phone, storefront.tenant.name, selectedProduct.name)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-200 py-4 text-sm font-bold uppercase tracking-widest text-stone-700 transition-all hover:bg-stone-50"
+                >
+                  <MessageCircleMore className="size-4" />
+                  Consultar por WhatsApp
+                </a>
+              </div>
             </div>
           </div>
         </div>
