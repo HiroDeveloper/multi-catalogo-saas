@@ -121,34 +121,30 @@ export function TenantAdminEditor({ initialTenant }: { initialTenant: AdminTenan
     <div className="min-h-screen bg-neutral-50 pb-20 font-sans text-neutral-900">
       {/* Header */}
       <header className="bg-white border-b border-neutral-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard/tenants" className="text-neutral-500 hover:text-neutral-900 transition-colors">
-                <ArrowLeft className="h-5 w-5" />
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16 gap-2">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              <Link href="/dashboard/tenants" className="flex-shrink-0 text-neutral-500 hover:text-neutral-900 transition-colors p-1">
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
               </Link>
-              <div>
-                <h1 className="text-lg font-semibold tracking-tight text-neutral-900">{tenant.name}</h1>
-                <div className="text-xs font-medium text-neutral-500 flex items-center gap-2">
-                  <span>{tenant.subdomain}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me'}</span>
-                </div>
+              <div className="min-w-0">
+                <h1 className="text-sm sm:text-base font-semibold tracking-tight text-neutral-900 truncate">{tenant.name}</h1>
+                <p className="hidden sm:block text-xs text-neutral-500 truncate">{tenant.subdomain}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'lvh.me'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <a
-                href={`/t/${tenant.subdomain}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-md bg-white border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-colors shadow-sm"
-              >
-                <ExternalLink className="h-4 w-4" />
-                Ver tienda
-              </a>
-            </div>
+            <a
+              href={`/t/${tenant.subdomain}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-md bg-white border border-neutral-200 px-2.5 py-1.5 text-xs sm:text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors shadow-sm"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Ver tienda</span>
+            </a>
           </div>
           
-          {/* Tabs */}
-          <div className="flex overflow-x-auto hide-scrollbar gap-1 pt-2">
+          {/* Tabs — scroll horizontally on mobile, show icon+label on desktop */}
+          <div className="flex overflow-x-auto scrollbar-none gap-0 -mb-px">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -156,14 +152,15 @@ export function TenantAdminEditor({ initialTenant }: { initialTenant: AdminTenan
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                    isActive 
-                      ? "border-black text-black" 
+                  title={tab.label}
+                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
+                    isActive
+                      ? "border-black text-black"
                       : "border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300"
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
+                  <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="sm:inline">{tab.label}</span>
                 </button>
               );
             })}
