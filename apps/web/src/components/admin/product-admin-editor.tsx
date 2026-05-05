@@ -21,7 +21,7 @@ export function ProductAdminEditor({
   onDelete: (id: string) => void;
   isSaving: boolean;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   // Helper to add an option
   const addOption = () => {

@@ -59,6 +59,7 @@ const TABS = [
 export function TenantAdminEditor({ initialTenant }: { initialTenant: AdminTenantDetail }) {
   const [tenant, setTenant] = useState(initialTenant);
   const [activeTab, setActiveTab] = useState("general");
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
   
   const [newCategory, setNewCategory] = useState<NewCategoryState>(emptyCategory);
   const [newProduct, setNewProduct] = useState<NewProductState>(emptyProduct);
@@ -418,56 +419,174 @@ export function TenantAdminEditor({ initialTenant }: { initialTenant: AdminTenan
         {/* TAB: PRODUCTS */}
         {activeTab === "products" && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-neutral-900">Catálogo de Productos</h2>
-                <p className="text-sm text-neutral-500 mt-1">Gestiona inventario, precios y variantes.</p>
+            {!editingProductId ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-neutral-900">Catálogo de Productos</h2>
+                    <p className="text-sm text-neutral-500 mt-1">Gestiona inventario, precios y variantes.</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800"
+                    onClick={() => setEditingProductId("new")}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Nuevo Producto
+                  </button>
+                </div>
+                
+                <div className="bg-white shadow-sm border border-neutral-200 rounded-xl overflow-hidden">
+                  <table className="min-w-full divide-y divide-neutral-200 text-left text-sm">
+                    <thead className="bg-neutral-50">
+                      <tr>
+                        <th className="px-6 py-3 text-xs font-medium text-neutral-500">Producto</th>
+                        <th className="px-6 py-3 text-xs font-medium text-neutral-500">Categoría</th>
+                        <th className="px-6 py-3 text-xs font-medium text-neutral-500 text-right">Precio</th>
+                        <th className="px-6 py-3 text-xs font-medium text-neutral-500 text-right">Stock Base</th>
+                        <th className="px-6 py-3 text-xs font-medium text-neutral-500 text-right">Variantes</th>
+                        <th className="px-6 py-3"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-neutral-200 bg-white">
+                      {tenant.products.map(p => (
+                        <tr key={p.id} className="hover:bg-neutral-50 transition-colors">
+                          <td className="px-6 py-4 font-medium text-neutral-900">{p.name}</td>
+                          <td className="px-6 py-4 text-neutral-500">{p.category?.name || "-"}</td>
+                          <td className="px-6 py-4 text-right">${p.price}</td>
+                          <td className="px-6 py-4 text-right">{p.stock}</td>
+                          <td className="px-6 py-4 text-right">
+                            {p.variants?.length ? (
+                              <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                                {p.variants.length}
+                              </span>
+                            ) : (
+                              <span className="text-neutral-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                             <button onClick={() => setEditingProductId(p.id)} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                               Editar
+                             </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {tenant.products.length === 0 && (
+                        <tr><td colSpan={6} className="px-6 py-12 text-center text-neutral-500">No hay productos en el catálogo.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : editingProductId === "new" ? (
+              <div className="max-w-4xl mx-auto">
+                <button
+                  type="button"
+                  onClick={() => setEditingProductId(null)}
+                  className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-neutral-500 hover:text-neutral-900 transition-colors"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Volver al catálogo
+                </button>
+                <div className="bg-white shadow-sm border border-neutral-200 rounded-xl overflow-hidden">
+                  <div className="px-6 py-5 border-b border-neutral-200 bg-neutral-50/50">
+                    <h3 className="text-base font-semibold leading-6 text-neutral-900">Crear nuevo producto</h3>
+                    <p className="mt-1 text-sm text-neutral-500">Añade los datos básicos. Podrás agregar tallas y colores en el siguiente paso.</p>
+                  </div>
+                  <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-neutral-700">Nombre</label>
+                      <input value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-neutral-700">Slug</label>
+                      <input value={newProduct.slug} onChange={(e) => setNewProduct({ ...newProduct, slug: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-neutral-700">Categoría</label>
+                      <select value={newProduct.categoryId} onChange={(e) => setNewProduct({ ...newProduct, categoryId: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border bg-white">
+                        <option value="">Sin categoría</option>
+                        {tenant.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-neutral-700">Stock Base</label>
+                      <input type="number" value={newProduct.stock} onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-neutral-700">Precio de Venta</label>
+                      <input type="number" step="0.01" value={newProduct.price} onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-neutral-700">Precio Anterior (Tachado)</label>
+                      <input type="number" step="0.01" value={newProduct.compareAtPrice} onChange={(e) => setNewProduct({ ...newProduct, compareAtPrice: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
+                    </div>
+                    <div className="md:col-span-2 space-y-2">
+                      <label className="block text-sm font-medium text-neutral-700">URL Imagen Principal</label>
+                      <input value={newProduct.imageUrl} onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
+                    </div>
+                  </div>
+                  <div className="px-6 py-4 bg-neutral-50 border-t border-neutral-200 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => void runMutation("prod-add", async () => {
+                        const res = await createAdminProduct(tenant.id, { ...newProduct, categoryId: newProduct.categoryId || null });
+                        if (res) {
+                          setNewProduct(emptyProduct);
+                          // Auto open the new product if possible, but for now just go back to list
+                          setEditingProductId(null);
+                        }
+                        return res;
+                      })}
+                      disabled={isBusy("prod-add") || !newProduct.name}
+                      className="inline-flex items-center gap-2 rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Crear Producto
+                    </button>
+                  </div>
+                </div>
               </div>
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800"
-                onClick={() => {
-                  const el = document.getElementById("new-product-form");
-                  el?.scrollIntoView({ behavior: "smooth" });
-                }}
-              >
-                <Plus className="h-4 w-4" />
-                Nuevo Producto
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              {tenant.products.map((product) => (
-                <div key={product.id} className="bg-white shadow-sm border border-neutral-200 rounded-xl p-6">
-                   <ProductAdminEditor
-                    product={product}
+            ) : (
+              <div className="max-w-5xl mx-auto">
+                <button
+                  type="button"
+                  onClick={() => setEditingProductId(null)}
+                  className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-neutral-500 hover:text-neutral-900 transition-colors"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Volver al catálogo
+                </button>
+                {tenant.products.find(p => p.id === editingProductId) && (
+                  <ProductAdminEditor
+                    product={tenant.products.find(p => p.id === editingProductId)!}
                     categories={tenant.categories}
-                    isSaving={isBusy(`product-${product.id}`)}
+                    isSaving={isBusy(`product-${editingProductId}`)}
                     onUpdate={(updatedProduct) => {
                       setTenant((current) => ({
                         ...current,
                         products: current.products.map((item) =>
-                          item.id === product.id ? updatedProduct : item
+                          item.id === editingProductId ? updatedProduct : item
                         ),
                       }));
                     }}
-                    onSave={() => {
-                      void runMutation(`product-${product.id}`, () =>
-                        updateAdminProduct(product.id, {
-                          name: product.name,
-                          slug: product.slug,
-                          categoryId: product.category?.id ?? null,
-                          shortDescription: product.shortDescription,
-                          price: product.price,
-                          compareAtPrice: product.compareAtPrice,
-                          stock: product.stock,
-                          imageUrl: product.images[0]?.url ?? "",
-                          options: product.options?.map(o => ({
+                    onSave={(productToSave) => {
+                      void runMutation(`product-${productToSave.id}`, () =>
+                        updateAdminProduct(productToSave.id, {
+                          name: productToSave.name,
+                          slug: productToSave.slug,
+                          categoryId: productToSave.category?.id ?? null,
+                          shortDescription: productToSave.shortDescription,
+                          price: productToSave.price,
+                          compareAtPrice: productToSave.compareAtPrice,
+                          stock: productToSave.stock,
+                          imageUrl: productToSave.images[0]?.url ?? "",
+                          options: productToSave.options?.map(o => ({
                             name: o.name,
                             position: o.position,
                             values: o.values.map(v => v.value)
                           })),
-                          variants: product.variants?.map(v => ({
+                          variants: productToSave.variants?.map(v => ({
                             name: v.name,
                             sku: v.sku,
                             price: v.price,
@@ -484,70 +603,15 @@ export function TenantAdminEditor({ initialTenant }: { initialTenant: AdminTenan
                       );
                     }}
                     onDelete={() => {
-                      void runMutation(`product-delete-${product.id}`, () =>
-                        deleteAdminProduct(product.id)
+                      void runMutation(`product-delete-${editingProductId}`, () =>
+                        deleteAdminProduct(editingProductId!)
                       );
+                      setEditingProductId(null);
                     }}
                   />
-                </div>
-              ))}
-            </div>
-
-            {/* New Product Form */}
-            <div id="new-product-form" className="bg-white shadow-sm border border-neutral-200 rounded-xl overflow-hidden mt-8">
-              <div className="px-6 py-5 border-b border-neutral-200 bg-neutral-50/50">
-                <h3 className="text-base font-semibold leading-6 text-neutral-900">Crear nuevo producto (Básico)</h3>
-                <p className="mt-1 text-sm text-neutral-500">Añade los datos básicos. Podrás agregar variantes (tallas/colores) una vez creado.</p>
+                )}
               </div>
-              <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-neutral-700">Nombre</label>
-                  <input value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-neutral-700">Slug</label>
-                  <input value={newProduct.slug} onChange={(e) => setNewProduct({ ...newProduct, slug: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-neutral-700">Categoría</label>
-                  <select value={newProduct.categoryId} onChange={(e) => setNewProduct({ ...newProduct, categoryId: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border bg-white">
-                    <option value="">Sin categoría</option>
-                    {tenant.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-neutral-700">Stock Base</label>
-                  <input type="number" value={newProduct.stock} onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-neutral-700">Precio de Venta</label>
-                  <input type="number" step="0.01" value={newProduct.price} onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-neutral-700">Precio Anterior (Tachado)</label>
-                  <input type="number" step="0.01" value={newProduct.compareAtPrice} onChange={(e) => setNewProduct({ ...newProduct, compareAtPrice: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
-                </div>
-                <div className="md:col-span-2 space-y-2">
-                  <label className="block text-sm font-medium text-neutral-700">URL Imagen Principal</label>
-                  <input value={newProduct.imageUrl} onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
-                </div>
-              </div>
-              <div className="px-6 py-4 bg-neutral-50 border-t border-neutral-200 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => void runMutation("prod-add", async () => {
-                    const res = await createAdminProduct(tenant.id, { ...newProduct, categoryId: newProduct.categoryId || null });
-                    if (res) setNewProduct(emptyProduct);
-                    return res;
-                  })}
-                  disabled={isBusy("prod-add") || !newProduct.name}
-                  className="inline-flex items-center gap-2 rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50"
-                >
-                  <Plus className="h-4 w-4" />
-                  Crear Producto
-                </button>
-              </div>
-            </div>
+            )}
           </div>
         )}
 
