@@ -640,7 +640,7 @@ export function TenantAdminEditor({ initialTenant }: { initialTenant: AdminTenan
                         </select>
                       </div>
                       <div className="md:col-span-3 flex justify-end gap-2 pt-5">
-                        <button type="button" onClick={() => void runMutation(`banner-${banner.id}`, () => updateAdminBanner(banner.id, { title: banner.title, subtitle: banner.subtitle, imageUrl: banner.imageUrl, status: banner.status }))} className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-sm font-medium rounded-md transition-colors">Guardar</button>
+                        <button type="button" onClick={() => void runMutation(`banner-${banner.id}`, () => updateAdminBanner(banner.id, { title: banner.title, subtitle: banner.subtitle, imageUrl: banner.imageUrl, status: banner.status }))} className="px-3 py-1.5 bg-black hover:bg-neutral-800 text-white text-sm font-medium rounded-md transition-colors">Guardar</button>
                         <button type="button" onClick={() => void runMutation(`banner-del-${banner.id}`, () => deleteAdminBanner(banner.id))} className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-medium rounded-md transition-colors"><Trash2 className="h-4 w-4"/></button>
                       </div>
                     </div>
@@ -679,7 +679,7 @@ export function TenantAdminEditor({ initialTenant }: { initialTenant: AdminTenan
                         </select>
                       </div>
                       <div className="md:col-span-3 flex justify-end gap-2 pt-5">
-                        <button type="button" onClick={() => void runMutation(`promo-${promo.id}`, () => updateAdminPromotion(promo.id, { name: promo.name, type: promo.type, couponCode: promo.couponCode }))} className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-sm font-medium rounded-md transition-colors">Guardar</button>
+                        <button type="button" onClick={() => void runMutation(`promo-${promo.id}`, () => updateAdminPromotion(promo.id, { name: promo.name, type: promo.type, couponCode: promo.couponCode }))} className="px-3 py-1.5 bg-black hover:bg-neutral-800 text-white text-sm font-medium rounded-md transition-colors">Guardar</button>
                         <button type="button" onClick={() => void runMutation(`promo-del-${promo.id}`, () => deleteAdminPromotion(promo.id))} className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-medium rounded-md transition-colors"><Trash2 className="h-4 w-4"/></button>
                       </div>
                     </div>

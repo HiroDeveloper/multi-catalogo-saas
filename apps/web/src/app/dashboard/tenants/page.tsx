@@ -85,7 +85,7 @@ export default async function DashboardTenantsPage() {
                     </a>
                     <Link
                       href={`/dashboard/tenants/${tenant.id}`}
-                      className="rounded-md bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-700 transition-colors"
+                      className="rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors"
                     >
                       Administrar
                     </Link>
@@ -144,7 +144,7 @@ export default async function DashboardTenantsPage() {
               </a>
               <Link
                 href={`/dashboard/tenants/${tenant.id}`}
-                className="flex-1 rounded-md bg-neutral-900 py-2 text-center text-xs font-medium text-white hover:bg-neutral-700 transition-colors flex items-center justify-center gap-1"
+                className="flex-1 rounded-md bg-black py-2 text-center text-xs font-medium text-white hover:bg-neutral-800 transition-colors flex items-center justify-center gap-1"
               >
                 Administrar <ChevronRight className="h-3 w-3" />
               </Link>
