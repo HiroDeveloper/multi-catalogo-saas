@@ -181,6 +181,7 @@ export function TenantStorefrontClient({
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [modalQuantity, setModalQuantity] = useState(1);
+  const [addedConfirm, setAddedConfirm] = useState<string | null>(null);
 
   // Find matching variant based on selected options
   const matchingVariant = selectedProduct?.variants?.find(v =>
@@ -202,6 +203,7 @@ export function TenantStorefrontClient({
     setSelectedOptions({});
     setSelectedImageIndex(0);
     setModalQuantity(1);
+    setAddedConfirm(null);
   }
 
   function addToCart(product: StorefrontProduct, variant?: any, qty = 1) {
@@ -244,8 +246,7 @@ export function TenantStorefrontClient({
       ];
     });
 
-    setSelectedProduct(null);
-    setIsCartOpen(true);
+    setAddedConfirm(name);
   }
 
   function changeQuantity(idKey: string, delta: number) {
@@ -1115,38 +1116,86 @@ export function TenantStorefrontClient({
 
               {/* CTA Buttons */}
               <div className="mt-6 flex flex-col gap-3">
-                <button
-                  onClick={() => {
-                    const hasOptions = selectedProduct.options && selectedProduct.options.length > 0;
-                    if (hasOptions && !matchingVariant) return;
-                    if (hasOptions && matchingVariant && matchingVariant.stock <= 0) return;
-                    addToCart(selectedProduct, matchingVariant ?? undefined, modalQuantity);
-                  }}
-                  disabled={
-                    (selectedProduct.options && selectedProduct.options.length > 0 && (!matchingVariant || matchingVariant.stock <= 0)) ||
-                    (!selectedProduct.options?.length && selectedProduct.stock <= 0)
-                  }
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-extrabold uppercase tracking-widest text-white disabled:cursor-not-allowed disabled:opacity-50 transition-all"
-                  style={getAccentButtonStyle(primary, secondary)}
-                >
-                  {selectedProduct.options && selectedProduct.options.length > 0 && !matchingVariant
-                    ? "Selecciona las opciones"
-                    : matchingVariant && matchingVariant.stock <= 0
-                      ? "Agotado"
-                      : selectedProduct.stock <= 0 && !selectedProduct.options?.length
-                        ? "Agotado"
-                        : "Agregar al carrito"}
-                  <ShoppingCart className="size-5" />
-                </button>
-                <a
-                  href={buildWhatsAppHref(phone, storefront.tenant.name, selectedProduct.name)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-200 py-4 text-sm font-bold uppercase tracking-widest text-stone-700 transition-all hover:bg-stone-50"
-                >
-                  <MessageCircleMore className="size-4" />
-                  Consultar por WhatsApp
-                </a>
+                {addedConfirm ? (
+                  <>
+                    <div
+                      className="flex items-center gap-3 rounded-2xl p-4"
+                      style={{ backgroundColor: `${primary}12` }}
+                    >
+                      <div
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+                        style={{ backgroundColor: primary }}
+                      >
+                        <ShoppingCart className="size-4 text-white" />
+                      </div>
+                      <p className="text-sm font-bold text-stone-800">
+                        <span className="line-clamp-1">{addedConfirm}</span>
+                        <span className="block text-xs font-normal text-stone-500">
+                          agregado al carrito
+                        </span>
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedProduct(null);
+                        setAddedConfirm(null);
+                        setIsCartOpen(true);
+                      }}
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-extrabold uppercase tracking-widest text-white transition-all"
+                      style={getAccentButtonStyle(primary, secondary)}
+                    >
+                      <ShoppingBag className="size-4" />
+                      Ir al carrito
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedProduct(null);
+                        setAddedConfirm(null);
+                      }}
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-200 py-4 text-sm font-bold uppercase tracking-widest text-stone-700 transition-all hover:bg-stone-50"
+                    >
+                      <ArrowRight className="size-4" />
+                      Seguir mirando
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        const hasOptions = selectedProduct.options && selectedProduct.options.length > 0;
+                        if (hasOptions && !matchingVariant) return;
+                        if (hasOptions && matchingVariant && matchingVariant.stock <= 0) return;
+                        addToCart(selectedProduct, matchingVariant ?? undefined, modalQuantity);
+                      }}
+                      disabled={
+                        (selectedProduct.options && selectedProduct.options.length > 0 && (!matchingVariant || matchingVariant.stock <= 0)) ||
+                        (!selectedProduct.options?.length && selectedProduct.stock <= 0)
+                      }
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-extrabold uppercase tracking-widest text-white disabled:cursor-not-allowed disabled:opacity-50 transition-all"
+                      style={getAccentButtonStyle(primary, secondary)}
+                    >
+                      {selectedProduct.options && selectedProduct.options.length > 0 && !matchingVariant
+                        ? "Selecciona las opciones"
+                        : matchingVariant && matchingVariant.stock <= 0
+                          ? "Agotado"
+                          : selectedProduct.stock <= 0 && !selectedProduct.options?.length
+                            ? "Agotado"
+                            : "Agregar al carrito"}
+                      <ShoppingCart className="size-5" />
+                    </button>
+                    <a
+                      href={buildWhatsAppHref(phone, storefront.tenant.name, selectedProduct.name)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl border border-stone-200 py-4 text-sm font-bold uppercase tracking-widest text-stone-700 transition-all hover:bg-stone-50"
+                    >
+                      <MessageCircleMore className="size-4" />
+                      Consultar por WhatsApp
+                    </a>
+                  </>
+                )}
               </div>
             </div>
           </div>
