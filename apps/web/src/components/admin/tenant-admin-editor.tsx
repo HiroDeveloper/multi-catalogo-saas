@@ -36,6 +36,7 @@ import {
 } from "@/lib/api/admin-client";
 import type { AdminTenantDetail, AdminQuoteRequest } from "@/lib/api/admin-types";
 import { ProductAdminEditor } from "./product-admin-editor";
+import { ImageUploadButton } from "./image-upload-button";
 
 type NewCategoryState = { name: string; slug: string; description: string };
 type NewProductState = { name: string; slug: string; categoryId: string; shortDescription: string; price: string; compareAtPrice: string; stock: string; imageUrl: string };
@@ -235,6 +236,27 @@ export function TenantAdminEditor({ initialTenant }: { initialTenant: AdminTenan
                     className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border bg-neutral-50"
                     disabled
                   />
+                </div>
+                
+                <div className="md:col-span-2 space-y-2">
+                  <label className="block text-sm font-medium text-neutral-700">Logo / Portada (URL)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={tenant.coverUrl ?? ""}
+                      onChange={(e) => setTenant({ ...tenant, coverUrl: e.target.value })}
+                      className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border"
+                      placeholder="https://..."
+                    />
+                    <ImageUploadButton 
+                      tenantId={tenant.id} 
+                      folder="branding" 
+                      onUploadSuccess={(url) => setTenant({ ...tenant, coverUrl: url })} 
+                    />
+                  </div>
+                  {tenant.coverUrl && (
+                    <img src={tenant.coverUrl} alt="Cover" className="mt-2 h-16 rounded-md border border-neutral-200 object-cover" />
+                  )}
                 </div>
                 
                 <div className="space-y-2">
@@ -520,7 +542,14 @@ export function TenantAdminEditor({ initialTenant }: { initialTenant: AdminTenan
                     </div>
                     <div className="md:col-span-2 space-y-2">
                       <label className="block text-sm font-medium text-neutral-700">URL Imagen Principal</label>
-                      <input value={newProduct.imageUrl} onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
+                      <div className="flex gap-2">
+                        <input value={newProduct.imageUrl} onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black focus:ring-black sm:text-sm px-3 py-2 border" />
+                        <ImageUploadButton 
+                          tenantId={tenant.id} 
+                          folder="products" 
+                          onUploadSuccess={(url) => setNewProduct({ ...newProduct, imageUrl: url })} 
+                        />
+                      </div>
                     </div>
                   </div>
                   <div className="px-6 py-4 bg-neutral-50 border-t border-neutral-200 flex justify-end">
@@ -556,6 +585,7 @@ export function TenantAdminEditor({ initialTenant }: { initialTenant: AdminTenan
                 </button>
                 {tenant.products.find(p => p.id === editingProductId) && (
                   <ProductAdminEditor
+                    tenantId={tenant.id}
                     product={tenant.products.find(p => p.id === editingProductId)!}
                     categories={tenant.categories}
                     isSaving={isBusy(`product-${editingProductId}`)}
@@ -630,7 +660,15 @@ export function TenantAdminEditor({ initialTenant }: { initialTenant: AdminTenan
                       </div>
                       <div className="md:col-span-3 space-y-1">
                         <label className="text-xs font-medium text-neutral-500">Imagen URL</label>
-                        <input value={banner.imageUrl} onChange={(e) => setTenant(curr => ({...curr, banners: curr.banners.map(b => b.id === banner.id ? {...b, imageUrl: e.target.value} : b)}))} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black sm:text-sm px-3 py-1.5 border" />
+                        <div className="flex gap-2">
+                          <input value={banner.imageUrl} onChange={(e) => setTenant(curr => ({...curr, banners: curr.banners.map(b => b.id === banner.id ? {...b, imageUrl: e.target.value} : b)}))} className="block w-full rounded-md border-neutral-300 shadow-sm focus:border-black sm:text-sm px-3 py-1.5 border" />
+                          <ImageUploadButton 
+                            tenantId={tenant.id} 
+                            folder="banners" 
+                            className="px-2 py-1.5 text-xs h-[34px]"
+                            onUploadSuccess={(url) => setTenant(curr => ({...curr, banners: curr.banners.map(b => b.id === banner.id ? {...b, imageUrl: url} : b)}))} 
+                          />
+                        </div>
                       </div>
                       <div className="md:col-span-3 space-y-1">
                         <label className="text-xs font-medium text-neutral-500">Estado</label>
@@ -647,8 +685,22 @@ export function TenantAdminEditor({ initialTenant }: { initialTenant: AdminTenan
                   ))}
                 </div>
                 <div className="px-6 py-5 bg-neutral-50 border-t border-neutral-200 flex gap-4 items-end">
-                  <div className="flex-1"><label className="text-xs font-medium text-neutral-500 block mb-1">Nuevo Título</label><input value={newBanner.title} onChange={e => setNewBanner({...newBanner, title: e.target.value})} className="block w-full rounded-md border-neutral-300 shadow-sm px-3 py-1.5 border" /></div>
-                  <div className="flex-1"><label className="text-xs font-medium text-neutral-500 block mb-1">URL Imagen</label><input value={newBanner.imageUrl} onChange={e => setNewBanner({...newBanner, imageUrl: e.target.value})} className="block w-full rounded-md border-neutral-300 shadow-sm px-3 py-1.5 border" /></div>
+                  <div className="flex-1">
+                    <label className="text-xs font-medium text-neutral-500 block mb-1">Nuevo Título</label>
+                    <input value={newBanner.title} onChange={e => setNewBanner({...newBanner, title: e.target.value})} className="block w-full rounded-md border-neutral-300 shadow-sm px-3 py-1.5 border" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-xs font-medium text-neutral-500 block mb-1">URL Imagen</label>
+                    <div className="flex gap-2">
+                      <input value={newBanner.imageUrl} onChange={e => setNewBanner({...newBanner, imageUrl: e.target.value})} className="block w-full rounded-md border-neutral-300 shadow-sm px-3 py-1.5 border" />
+                      <ImageUploadButton 
+                        tenantId={tenant.id} 
+                        folder="banners" 
+                        className="px-2 py-1.5 text-xs h-[34px]"
+                        onUploadSuccess={(url) => setNewBanner({...newBanner, imageUrl: url})} 
+                      />
+                    </div>
+                  </div>
                   <button type="button" onClick={() => void runMutation("banner-add", async () => { const res = await createAdminBanner(tenant.id, newBanner); if(res) setNewBanner(emptyBanner); return res; })} className="px-4 py-2 bg-black text-white rounded-md text-sm font-medium">Añadir Banner</button>
                 </div>
               </div>

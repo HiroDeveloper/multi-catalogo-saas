@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, Trash2, Palette, Ruler, Weight, ChevronDown, ChevronUp } from "lucide-react";
 import { AdminTenantDetail } from "@/lib/api/admin-types";
+import { ImageUploadButton } from "./image-upload-button";
 
 type ProductType = AdminTenantDetail["products"][0];
 
@@ -101,8 +102,9 @@ function GenericAddForm({ placeholder, onAdd }: { placeholder: string; onAdd: (v
 // ---- Main Component ----
 
 export function ProductAdminEditor({
-  product, categories, onUpdate, onSave, onDelete, isSaving
+  tenantId, product, categories, onUpdate, onSave, onDelete, isSaving
 }: {
+  tenantId: string;
   product: ProductType;
   categories: AdminTenantDetail["categories"];
   onUpdate: (updated: ProductType) => void;
@@ -213,13 +215,23 @@ export function ProductAdminEditor({
           </div>
           <div className="md:col-span-2 space-y-1.5">
             <label className="block text-xs font-medium text-neutral-600">URL Imagen Principal</label>
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <input value={product.images[0]?.url ?? ""} onChange={e => {
                 const imgs = [...product.images];
                 if (imgs.length > 0) imgs[0] = { ...imgs[0], url: e.target.value };
                 else imgs.push({ id: `img-${Date.now()}`, url: e.target.value, alt: "" });
                 onUpdate({ ...product, images: imgs });
               }} placeholder="https://..." className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm" />
+              <ImageUploadButton 
+                tenantId={tenantId} 
+                folder="products" 
+                onUploadSuccess={(url) => {
+                  const imgs = [...product.images];
+                  if (imgs.length > 0) imgs[0] = { ...imgs[0], url };
+                  else imgs.push({ id: `img-${Date.now()}`, url, alt: "" });
+                  onUpdate({ ...product, images: imgs });
+                }} 
+              />
               {product.images[0]?.url && (
                 <img src={product.images[0].url} alt="preview" className="h-9 w-9 rounded-md object-cover border border-neutral-200" onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
               )}
@@ -406,8 +418,14 @@ export function ProductAdminEditor({
                               <input
                                 value={v.image?.url || (v as { imageUrl?: string | null }).imageUrl || ""}
                                 onChange={e => updateVariant(vIdx, "imageUrl", e.target.value)}
-                                placeholder="https://... (opcional, si no se usará la imagen principal)"
+                                placeholder="https://... (opcional)"
                                 className="flex-1 rounded-md border border-neutral-300 px-2 py-1.5 text-xs"
+                              />
+                              <ImageUploadButton 
+                                tenantId={tenantId} 
+                                folder="variants" 
+                                onUploadSuccess={(url) => updateVariant(vIdx, "imageUrl", url)} 
+                                className="px-2 py-1.5"
                               />
                               {(v.image?.url || (v as { imageUrl?: string | null }).imageUrl) && (
                                 <img src={v.image?.url || (v as { imageUrl?: string | null }).imageUrl!} alt="" className="h-8 w-8 rounded object-cover border border-neutral-200" onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />

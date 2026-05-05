@@ -154,3 +154,39 @@ export function createAdminTenant(body: Record<string, unknown>) {
   });
 }
 
+// ── Uploads ─────────────────────────────────────────
+
+export async function uploadAdminFile(file: File, tenantId: string, folder: string = "general") {
+  const env = getPublicEnv();
+  const supabase = createSupabaseBrowserClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("tenantId", tenantId);
+  formData.append("folder", folder);
+
+  try {
+    const response = await fetch(`${env.apiUrl.replace(/\/$/, "")}/uploads`, {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(text || "Upload failed");
+    }
+
+    return response.json() as Promise<{ url: string; key: string }>;
+  } catch (error) {
+    console.error("Upload error:", error);
+    return null;
+  }
+}
+

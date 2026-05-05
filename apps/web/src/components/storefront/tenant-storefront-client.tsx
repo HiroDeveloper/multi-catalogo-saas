@@ -1158,11 +1158,11 @@ export function TenantStorefrontClient({
       {/* Add-to-cart confirmation modal */}
       {addedConfirm && (
         <div
-          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-sm"
+          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-sm animate-modal-backdrop"
           onClick={() => setAddedConfirm(null)}
         >
           <div
-            className="w-full max-w-sm overflow-hidden rounded-[28px] bg-white shadow-2xl"
+            className="animate-modal-pop w-full max-w-sm overflow-hidden rounded-[28px] bg-white shadow-2xl"
             style={{ boxShadow: `0 32px 80px -12px ${hexToRgba(primary, 0.28)}` }}
             onClick={(e) => e.stopPropagation()}
           >
